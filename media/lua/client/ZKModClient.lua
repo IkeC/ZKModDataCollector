@@ -61,6 +61,8 @@ local function SendPlayerData(isdead)
     local traits = player:getTraits()
     playerData.traits = traits:toString()
 
+    playerData.isFemale = player:isFemale()
+
     local command = "SendPlayerDataAlive"
     if isdead then
         command = "SendPlayerDataDead"

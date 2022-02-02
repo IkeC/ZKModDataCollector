@@ -1,6 +1,5 @@
 -- Made by IkeC
--- Based on "Server Players Data" by Lemos:
--- https://steamcommunity.com/sharedfiles/filedetails/?id=2695733462
+-- CSV saving based on "Server Players Data" by Lemos: https://steamcommunity.com/sharedfiles/filedetails/?id=2695733462
 
 function ZKGetGameTimeString(gt)
     local minutes = string.format("%02d", gt:getMinutes())

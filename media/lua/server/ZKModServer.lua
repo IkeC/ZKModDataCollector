@@ -1,6 +1,6 @@
 -- Made by IkeC
--- Based on "Server Players Data" by Lemos:
--- https://steamcommunity.com/sharedfiles/filedetails/?id=2695733462
+-- CSV saving based on "Server Players Data" by Lemos: https://steamcommunity.com/sharedfiles/filedetails/?id=2695733462
+
 require "ZKModShared"
 
 print("ZKModServer: isServer=" .. tostring(isServer()))
@@ -9,7 +9,7 @@ if not isServer() then
     return
 end
 
--- Parse player data and save it to a .csv file inside Lua/ServerPlayersData/ folder
+-- Parse player data and save it to a .csv file inside Lua/ZKMod/ folder
 local function SavePlayerData(data, savedead)
     if data then
 
@@ -40,7 +40,7 @@ local function SavePlayerData(data, savedead)
     end
 end
 
--- Parse player event data and save it to event_history.csv file inside Lua/ServerPlayersData/ folder
+-- Parse player event data and save it to event_history.csv file inside Lua/ZKMod/ folder
 local function SaveEventData(data)
     if data then
         -- overwrite client data with server date/time

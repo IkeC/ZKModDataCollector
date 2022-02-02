@@ -1,6 +1,6 @@
 -- Made by IkeC
--- Based on "Server Players Data" by Lemos:
--- https://steamcommunity.com/sharedfiles/filedetails/?id=2695733462
+-- CSV saving based on "Server Players Data" by Lemos: https://steamcommunity.com/sharedfiles/filedetails/?id=2695733462
+
 require "ZKModShared"
 
 if isServer() then

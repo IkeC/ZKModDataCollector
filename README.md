@@ -1,8 +1,7 @@
 # Description
 ZKMod is a Project Zomboid Steam Workshop Mod to collect and save player and world statistics on the server.
 
-Workshop ID: 2733284288
-Mod ID: ZKMod
+Workshop ID: 2733284288 / Mod ID: ZKMod
 
 # Changelog
 ## ZKMod 1.1 (2022-02-02)

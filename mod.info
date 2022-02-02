@@ -1,4 +1,4 @@
-name=Zombies-Klatschen-Mod
+name=ZKMod
 id=ZKMod
-description=log and save player and game world data
+description=collects and saves player and world statistics on the server
 poster=poster.png

@@ -291,8 +291,8 @@ function ZKGetWeather()
     weatherData.windpower = 0
     weatherData.windspeed = 0
 
-    weatherData.rain = false 
-    weatherData.snow = false 
+    weatherData.rain = false
+    weatherData.snow = false
 
     weatherData.thunderstorm = false
     weatherData.tropicalstorm = false

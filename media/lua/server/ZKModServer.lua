@@ -205,72 +205,6 @@ Events.OnClientCommand.Add(PlayerDataReceived)
 Events.EveryHours.Add(ZKEveryHour)
 Events.EveryTenMinutes.Add(ZKEveryTenMinutes)
 
--- https://pzwiki.net/wiki/Modding:Lua_Events/OnRainStart
-function ZKOnRainStart()
-    print("ZKModServer.ZKOnRainStart")
-    -- ZKWriteEvent("global", "Es beginnt zu regnen.")
-end
-Events.OnRainStart.Add(ZKOnRainStart)
-
--- https://pzwiki.net/wiki/Modding:Lua_Events/OnRainStop
-function ZKOnRainStop()
-    print("ZKModServer.ZKOnRainStop")
-    -- ZKWriteEvent("global", "Der Regen hat aufgehört.")
-end
-Events.OnRainStop.Add(ZKOnRainStop)
-
--- https://pzwiki.net/wiki/Modding:Lua_Events/OnDawn
-function ZKOnDawn()
-    print("ZKModServer.ZKOnDawn")
-    -- ZKWriteEvent("global", "Die Sonne geht auf.")
-end
-Events.OnDawn.Add(ZKOnDawn)
-
--- https://pzwiki.net/wiki/Modding:Lua_Events/OnDusk
-function ZKOnDusk()
-    print("ZKModServer.ZKOnDusk")
-    -- ZKWriteEvent("global", "Die Sonne geht unter.")
-end
-Events.OnDusk.Add(ZKOnDusk)
-
--- https://pzwiki.net/wiki/Modding:Lua_Events/OnChangeWeather
--- String A string representing the weather. Can be either: "normal", "cloud", "rain", or "sunny"
-function ZKOnChangeWeather(weather)
-    print("ZKModServer.ZKOnChangeWeather")
-    print("ZKModServer.ZKOnChangeWeather: weather=" .. weather)
-end
-Events.OnChangeWeather.Add(ZKOnChangeWeather)
-
-function ZKOnWeatherPeriodStart(weatherPeriod)
-    print("ZKModServer.ZKOnWeatherPeriodStart")
-    --print(weatherPeriod)
-end
-Events.OnWeatherPeriodStart.Add(ZKOnWeatherPeriodStart)
-
--- works! (called twice?)
-function ZKOnWeatherPeriodStop(weatherPeriod)
-    print("ZKModServer.ZKOnWeatherPeriodStop")
-    --print(weatherPeriod)
-end
-Events.OnWeatherPeriodStop.Add(ZKOnWeatherPeriodStop)
-
-function ZKOnWeatherPeriodComplete(weatherPeriod)
-    print("ZKModServer.ZKOnWeatherPeriodComplete")
-    --print(weatherPeriod)
-end
-Events.OnWeatherPeriodComplete.Add(ZKOnWeatherPeriodComplete)
-
--- works!
-function ZKOnWeatherPeriodStage(weatherPeriod)
-    -- https://zomboid-javadoc.com/41.65/zombie/iso/weather/WeatherPeriod.html
-    print("ZKModServer.ZKOnWeatherPeriodStage")
-    print(weatherPeriod)
-end
-Events.OnWeatherPeriodStage.Add(ZKOnWeatherPeriodStage)
-
-Events.OnRainStart.Add(ZKOnRainStart)
-Events.OnRainStop.Add(ZKOnRainStop)
-
 
 -- Based on weather function by Snake: http://pzmodding.blogspot.com/
 function ZKGetWeather()
@@ -345,3 +279,71 @@ function ZKGetWeather()
 
     return weatherData
 end
+
+
+-- https://pzwiki.net/wiki/Modding:Lua_Events/OnRainStart
+function ZKOnRainStart()
+    print("ZKModServer.ZKOnRainStart")
+    -- ZKWriteEvent("global", "Es beginnt zu regnen.")
+end
+Events.OnRainStart.Add(ZKOnRainStart)
+
+-- https://pzwiki.net/wiki/Modding:Lua_Events/OnRainStop
+function ZKOnRainStop()
+    print("ZKModServer.ZKOnRainStop")
+    -- ZKWriteEvent("global", "Der Regen hat aufgehört.")
+end
+Events.OnRainStop.Add(ZKOnRainStop)
+
+-- https://pzwiki.net/wiki/Modding:Lua_Events/OnDawn
+function ZKOnDawn()
+    print("ZKModServer.ZKOnDawn")
+    -- ZKWriteEvent("global", "Die Sonne geht auf.")
+end
+Events.OnDawn.Add(ZKOnDawn)
+
+-- https://pzwiki.net/wiki/Modding:Lua_Events/OnDusk
+function ZKOnDusk()
+    print("ZKModServer.ZKOnDusk")
+    -- ZKWriteEvent("global", "Die Sonne geht unter.")
+end
+Events.OnDusk.Add(ZKOnDusk)
+
+-- https://pzwiki.net/wiki/Modding:Lua_Events/OnChangeWeather
+-- String A string representing the weather. Can be either: "normal", "cloud", "rain", or "sunny"
+function ZKOnChangeWeather(weather)
+    print("ZKModServer.ZKOnChangeWeather")
+    -- print("ZKModServer.ZKOnChangeWeather: weather=" .. weather)
+end
+Events.OnChangeWeather.Add(ZKOnChangeWeather)
+
+function ZKOnWeatherPeriodStart(weatherPeriod)
+    print("ZKModServer.ZKOnWeatherPeriodStart")
+    --print(weatherPeriod)
+end
+Events.OnWeatherPeriodStart.Add(ZKOnWeatherPeriodStart)
+
+-- works! (called twice?)
+function ZKOnWeatherPeriodStop(weatherPeriod)
+    print("ZKModServer.ZKOnWeatherPeriodStop")
+    --print(weatherPeriod)
+end
+Events.OnWeatherPeriodStop.Add(ZKOnWeatherPeriodStop)
+
+function ZKOnWeatherPeriodComplete(weatherPeriod)
+    print("ZKModServer.ZKOnWeatherPeriodComplete")
+    --print(weatherPeriod)
+end
+Events.OnWeatherPeriodComplete.Add(ZKOnWeatherPeriodComplete)
+
+-- works!
+function ZKOnWeatherPeriodStage(weatherPeriod)
+    -- https://zomboid-javadoc.com/41.65/zombie/iso/weather/WeatherPeriod.html
+    print("ZKModServer.ZKOnWeatherPeriodStage")
+    print(weatherPeriod)
+end
+Events.OnWeatherPeriodStage.Add(ZKOnWeatherPeriodStage)
+
+Events.OnRainStart.Add(ZKOnRainStart)
+Events.OnRainStop.Add(ZKOnRainStop)
+

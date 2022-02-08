@@ -6,7 +6,7 @@ Mod page on Steam: https://steamcommunity.com/sharedfiles/filedetails/?id=273328
 Workshop ID: 2733284288 / Mod ID: ZKMod
 
 # Configuration
-You may configure or turn features off in *<servername>_SandboxVars.lua*. If you don't configure anything default values are used.
+You may configure or turn features off in *\<servername\>_SandboxVars.lua*. If you don't configure anything default values are used.
   
 Example configuration:
 ```

@@ -4,10 +4,11 @@ ZKMod is a Project Zomboid Steam Workshop Mod to collect and save player and wor
 Workshop ID: 2733284288 / Mod ID: ZKMod
 
 # Changelog
+
 ## ZKMod 1.2 (2022-02-08)
 * Feature: safehouses.csv: safehouse info
 * Feature: factions.csv: faction info
-* Feature: player_(name).csv: added faction and safehouse info
+* Feature: player_(name).csv: added faction info, safehouse info, favorite weapon name and hits
 * all features can be configured or turned off in sandbox settings
 
 ## ZKMod 1.1 (2022-02-02)

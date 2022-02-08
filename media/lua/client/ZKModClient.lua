@@ -1,6 +1,5 @@
 -- Made by IkeC
 -- CSV saving based on "Server Players Data" by Lemos: https://steamcommunity.com/sharedfiles/filedetails/?id=2695733462
-
 require "ZKModShared"
 
 if isServer() then
@@ -34,6 +33,7 @@ local function ZKGetCommonPlayerData()
 
     playerData.username = username
     playerData.charName = forname .. " " .. surname
+
     return playerData
 end
 
@@ -79,34 +79,68 @@ local function SendPlayerData(isdead)
         -- https://zomboid-javadoc.com/41.65/zombie/characters/Faction.html
         local faction = Faction.getPlayerFaction(player)
         if faction then
-            local tagColor = ""
-            if faction:getTagColor() then
-                tagColor = faction:getTagColor():toString()
-            end
+            
             playerData.factionName = faction:getName()
             playerData.factionTag = faction:getTag()
-            playerData.factionTagColor = tagColor
-            ZKPrint("faction: name=" .. faction:getName() .. " tag=" .. faction:getTag() .. " tagColor=" .. tagColor)
+            
+            playerData.factionTagColorR = ""
+            playerData.factionTagColorG = ""
+            playerData.factionTagColorB = ""
+
+            if faction:getTagColor() then
+                local color = faction:getTagColor():toColor()
+                playerData.factionTagColorR = color:getRed()
+                playerData.factionTagColorG = color:getGreen()
+                playerData.factionTagColorB = color:getBlue()
+            end
         else
             playerData.factionName = ""
             playerData.factionTag = ""
-            playerData.factionTagColor = ""
+            playerData.factionTagColorR = ""
+            playerData.factionTagColorG = ""
+            playerData.factionTagColorB = ""
             -- ZKPrint("faction empty")
         end
 
         -- https://zomboid-javadoc.com/41.65/zombie/iso/areas/SafeHouse.html
         local safehouse = SafeHouse.getSafeHouse(player:getSquare())
         if safehouse then
-            playerData.safehouseTitle = ""
+            playerData.safehouseTitle = safehouse:getTtile()
             playerData.safehouseX = safehouse:getX()
             playerData.safehouseX2 = safehouse:getX2()
             playerData.safehouseY = safehouse:getY()
             playerData.safehouseY2 = safehouse:getY2()
-            ZKPrint("safehouse: title=" .. safehouse:getTitle() .. " X=" .. safehouse:getX() .. " Y=" .. safehouse:getY() ..  " X2=" .. safehouse:getX2() .. " Y2=" .. safehouse:getY2())
+            -- ZKPrint("safehouse: title=" .. safehouse:getTitle() .. " X=" .. safehouse:getX() .. " Y=" .. safehouse:getY() ..  " X2=" .. safehouse:getX2() .. " Y2=" .. safehouse:getY2())
         else
             playerData.safehouseTitle = ""
-            ZKPrint("safehouse empty")
-        end 
+            playerData.safehouseX = ""
+            playerData.safehouseX2 = ""
+            playerData.safehouseY = ""
+            playerData.safehouseY2 = ""
+            -- ZKPrint("safehouse empty")
+        end
+
+        local favoriteWeaponHit = 0;
+        local favoriteWeapon = "";
+    
+        local modData = player:getModData()
+        if modData then
+            for iPData, vPData in pairs(modData) do
+                -- ZKPrint("iPData type=[" .. type(iPData) .. "]")
+                -- ZKPrint("iPData=[" .. ZKDump(iPData) .. "]")
+                -- ZKPrint("vPData type=[" .. type(vPData) .. "]")
+                -- ZKPrint("vPData=[" .. ZKDump(vPData) .. "]")
+                for index in string.gmatch(iPData, "^Fav:(.+)") do
+                    if vPData > favoriteWeaponHit then
+                        favoriteWeapon = index;
+                        favoriteWeaponHit = vPData;
+                    end
+                end
+            end
+        end
+        
+        playerData.favoriteWeapon = favoriteWeapon;
+        playerData.favoriteWeaponHit = favoriteWeaponHit;
 
         local command = "SendPlayerDataAlive"
         if isdead then
@@ -127,7 +161,7 @@ local function ZKSendPlayerDataDeath()
     SendPlayerData(true)
 end
 
-local function ZKGetEventData(EventName)    
+local function ZKGetEventData(EventName)
     local eventData = ZKGetCommonPlayerData()
     eventData.eventName = EventName
     eventData.eventData1 = ""
@@ -135,7 +169,7 @@ local function ZKGetEventData(EventName)
     eventData.eventData3 = ""
     eventData.eventData4 = ""
     eventData.eventData5 = ""
-    
+
     return eventData
 end
 
@@ -157,26 +191,29 @@ local function ZKLevelPerk(character, perk, level, levelUp)
 end
 
 local function ZKOnGameStart()
-    ZKPrint("ZKModClient.ZKOnGameStart: SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery=" .. SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery)
+    ZKPrint("ZKModClient.ZKOnGameStart: SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery=" ..
+                SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery)
     -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
     -- Default: 2
 
     if SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery == 1 then
-        Events.EveryTenMinutes.Add(ZKSendPlayerDataAlive)    
+        Events.EveryTenMinutes.Add(ZKSendPlayerDataAlive)
     elseif SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery == 2 then
         Events.EveryHours.Add(ZKSendPlayerDataAlive)
     elseif SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery == 3 then
         Events.EveryDays.Add(ZKSendPlayerDataAlive)
     end
 
-    ZKPrint("ZKModClient.ZKOnGameStart: SandboxVars.ZKMod.ClientSendPlayerDataDeath=" .. SandboxVars.ZKMod.ClientSendPlayerDataDeath)
+    ZKPrint("ZKModClient.ZKOnGameStart: SandboxVars.ZKMod.ClientSendPlayerDataDeath=" ..
+                SandboxVars.ZKMod.ClientSendPlayerDataDeath)
     -- 0: Off, 1: On
     -- Default: 1
     if SandboxVars.ZKMod.ClientSendPlayerDataDeath == 1 then
         Events.OnPlayerDeath.Add(ZKSendPlayerDataDeath)
     end
 
-    ZKPrint("ZKModClient.ZKOnGameStart: SandboxVars.ZKMod.ClientSendEventLevelPerk=" .. SandboxVars.ZKMod.ClientSendEventLevelPerk)
+    ZKPrint("ZKModClient.ZKOnGameStart: SandboxVars.ZKMod.ClientSendEventLevelPerk=" ..
+                SandboxVars.ZKMod.ClientSendEventLevelPerk)
     -- 0: Off, 1: On
     -- Default: 1
     if SandboxVars.ZKMod.ClientSendEventLevelPerk == 1 then
@@ -185,6 +222,6 @@ local function ZKOnGameStart()
 end
 Events.OnGameStart.Add(ZKOnGameStart)
 
---https://pzwiki.net/wiki/Modding:Lua_Events/OnNewFire
---https://pzwiki.net/wiki/Modding:Lua_Events/OnZombieDead
---https://pzwiki.net/wiki/Modding:Lua_Events/OnCharacterMeet
+-- https://pzwiki.net/wiki/Modding:Lua_Events/OnNewFire
+-- https://pzwiki.net/wiki/Modding:Lua_Events/OnZombieDead
+-- https://pzwiki.net/wiki/Modding:Lua_Events/OnCharacterMeet

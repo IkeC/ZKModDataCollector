@@ -13,7 +13,7 @@ end
 local function SavePlayerData(data, savedead)
     if data then
 
-        ZKPrint("ZKModServer: data.isAlive=" .. tostring(data.isAlive) .. " savedead=" .. tostring(savedead))
+        -- ZKPrint("ZKModServer.SavePlayerData: data.isAlive=" .. tostring(data.isAlive) .. " savedead=" .. tostring(savedead))
 
         -- overwrite client data with server date/time
         data.systemDate = ZKGetSystemDate()
@@ -60,7 +60,7 @@ end
 
 -- executed when a client sends its information to the server
 local ZKOnClientCommand = function(module, command, player, args)
-    ZKPrint("ZKModServer.ZKOnClientCommand: module=" .. module .. " command=" .. command .. " username=" .. args.username)
+    -- ZKPrint("ZKModServer.ZKOnClientCommand: module=" .. module .. " command=" .. command .. " username=" .. args.username)
 
     if module ~= "ZKMod" then
         return;
@@ -262,10 +262,8 @@ end
 local ZKSaveSafehouses = function()    
     
     -- https://zomboid-javadoc.com/41.65/zombie/iso/areas/SafeHouse.html
-    local safehouses = SafeHouse:getSafehouseList() -- safehouses:size() == 0 
-    
-    ZKPrint("ZKModServer.ZKSaveSafehouses: safehouses.size=" .. safehouses:size())
-    
+    local safehouses = SafeHouse:getSafehouseList() 
+        
     local strHeader = ""
     local strData = ""
 
@@ -290,12 +288,12 @@ local ZKSaveSafehouses = function()
             local players = "Players(" .. safehouse:getOwner()
             local playersList = safehouse:getPlayers()
 
-            ZKPrint("ZKModServer.ZKSaveSafehouses: playersList:size()=" .. playersList:size())
+            -- ZKPrint("ZKModServer.ZKSaveSafehouses: playersList:size()=" .. playersList:size())
 
             if playersList then
                 for j = 0, playersList:size() - 1 do
                     local player = playersList:get(j)
-                    ZKPrint("ZKModServer.ZKSaveSafehouses: j=" .. j .. " player=" .. player)
+                    -- ZKPrint("ZKModServer.ZKSaveSafehouses: j=" .. j .. " player=" .. player)
                     if player ~= safehouse:getOwner() then                        
                         players = players .. ", " .. player
                     end
@@ -318,15 +316,13 @@ local ZKSaveSafehouses = function()
     dataFile:write(strData)
     dataFile:close()
 
-    ZKPrint("ZKModServer.ZKSaveSafehouses: saved to " .. filePath)
+    ZKPrint("ZKModServer.ZKSaveSafehouses: " .. safehouses:size() .. " safehouse(s) saved to " .. filePath)
 end
 
 local ZKSaveFactions = function()    
     
     -- https://zomboid-javadoc.com/41.65/zombie/characters/Faction.html
     local factions = Faction:getFactions()
-
-    ZKPrint("ZKModServer.ZKSaveFactions: factions:size()=" .. factions:size())
 
     local strHeader = ""
     local strData = ""
@@ -357,12 +353,12 @@ local ZKSaveFactions = function()
             local players = "Players(" .. faction:getOwner()            
             local playersList = faction:getPlayers()
 
-            ZKPrint("ZKModServer.ZKSaveFactions: playersList:size()=" .. playersList:size())
+            -- ZKPrint("ZKModServer.ZKSaveFactions: playersList:size()=" .. playersList:size())
 
             if playersList then
                 for j = 0, playersList:size() - 1 do
                     local player = playersList:get(j)
-                    ZKPrint("ZKModServer.ZKSaveFactions: j=" .. j .. " player=" .. player)
+                    -- ZKPrint("ZKModServer.ZKSaveFactions: j=" .. j .. " player=" .. player)
                     if player ~= faction:getOwner() then
                         players = players .. ", " .. player
                     end
@@ -385,7 +381,7 @@ local ZKSaveFactions = function()
     dataFile:write(strData)
     dataFile:close()
 
-    ZKPrint("ZKModServer.ZKSaveFactions: saved to " .. filePath)
+    ZKPrint("ZKModServer.ZKSaveFactions: " .. factions:size() .. " faction(s) saved to " .. filePath)
 end
 
 function ZKOnInitWorld()
@@ -451,6 +447,7 @@ function ZKOnInitWorld()
     elseif SandboxVars.ZKMod.ServerSaveFactionsEvery == 3 then
         Events.EveryDays.Add(ZKSaveFactions)
     end
+
 end
 Events.OnInitWorld.Add(ZKOnInitWorld)
 

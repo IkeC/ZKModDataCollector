@@ -1,4 +1,6 @@
 name=ZKMod
 id=ZKMod
-description=collects and saves player and world statistics on the server
+description=Collects and saves world and player data on your server.
+description=
+description=All details here: https://github.com/IkeC/ZKMod/blob/master/README.md
 poster=poster.png

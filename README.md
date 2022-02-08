@@ -29,6 +29,10 @@ All options and possible values: https://github.com/IkeC/ZKMod/blob/master/media
 
 # Changelog
 
+## ZKMod 1.2.1 (2022-02-08)
+* Fix: worldData save not triggered
+* Fix: Player safehouse data not saved correctly
+
 ## ZKMod 1.2 (2022-02-08)
 * Feature: safehouses.csv: safehouse info
 * Feature: factions.csv: faction info

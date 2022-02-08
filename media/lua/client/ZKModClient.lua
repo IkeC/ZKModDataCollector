@@ -7,13 +7,14 @@ if isServer() then
     return
 end
 
-
 local function ZKGetCommonPlayerData()
+    ZKPrint("ZKModClient.ZKGetCommonPlayerData")
+
     -- https://zomboid-javadoc.com/41.65/zombie/characters/IsoPlayer.html
     local player = getPlayer()
 
     if not player then
-        print("ZKModClient: ZKGetCommonPlayerData: No player data, exiting")
+        ZKPrint("ZKModClient.ZKGetCommonPlayerData: No player data, exiting")
         return
     end
 
@@ -39,12 +40,12 @@ end
 -- Called on the player to parse its player data and send it to the server every ten (in-game) minutes
 local function SendPlayerData(isdead)
 
-    print("ZKModClient: SendPlayerData: isdead=" .. tostring(isdead))
+    ZKPrint("ZKModClient.SendPlayerData: isdead=" .. tostring(isdead))
 
     -- https://zomboid-javadoc.com/41.65/zombie/characters/IsoPlayer.html
     local player = getPlayer()
     if not player then
-        print("ZKModClient: SendPlayerData: No player data, exiting")
+        ZKPrint("ZKModClient.SendPlayerData: No player data, exiting")
         return
     end
 
@@ -75,28 +76,68 @@ local function SendPlayerData(isdead)
 
         playerData.isFemale = player:isFemale()
 
+        -- https://zomboid-javadoc.com/41.65/zombie/characters/Faction.html
+        local faction = Faction.getPlayerFaction(player)
+        if faction then
+            local tagColor = ""
+            if faction:getTagColor() then
+                tagColor = faction:getTagColor():toString()
+            end
+            playerData.factionName = faction:getName()
+            playerData.factionTag = faction:getTag()
+            playerData.factionTagColor = tagColor
+            ZKPrint("faction: name=" .. faction:getName() .. " tag=" .. faction:getTag() .. " tagColor=" .. tagColor)
+        else
+            playerData.factionName = ""
+            playerData.factionTag = ""
+            playerData.factionTagColor = ""
+            -- ZKPrint("faction empty")
+        end
+
+        -- https://zomboid-javadoc.com/41.65/zombie/iso/areas/SafeHouse.html
+        local safehouse = SafeHouse.getSafeHouse(player:getSquare())
+        if safehouse then
+            playerData.safehouseTitle = ""
+            playerData.safehouseX = safehouse:getX()
+            playerData.safehouseX2 = safehouse:getX2()
+            playerData.safehouseY = safehouse:getY()
+            playerData.safehouseY2 = safehouse:getY2()
+            ZKPrint("safehouse: title=" .. safehouse:getTitle() .. " X=" .. safehouse:getX() .. " Y=" .. safehouse:getY() ..  " X2=" .. safehouse:getX2() .. " Y2=" .. safehouse:getY2())
+        else
+            playerData.safehouseTitle = ""
+            ZKPrint("safehouse empty")
+        end 
+
         local command = "SendPlayerDataAlive"
         if isdead then
             command = "SendPlayerDataDead"
         end
 
-        print("ZKModClient: " .. playerData.username .. ": command=" .. command)
+        ZKPrint("ZKModClient.SendPlayerData: command=" .. command .. " username=" .. playerData.username)
 
         sendClientCommand(player, "ZKMod", command, playerData)
     end
 end
 
-local function SendPlayerDataAlive()
+local function ZKSendPlayerDataAlive()
     SendPlayerData(false)
 end
 
-local function SendPlayerDataDead()
+local function ZKSendPlayerDataDeath()
     SendPlayerData(true)
 end
 
-Events.EveryHours.Add(SendPlayerDataAlive)
-Events.OnPlayerDeath.Add(SendPlayerDataDead)
-
+local function ZKGetEventData(EventName)    
+    local eventData = ZKGetCommonPlayerData()
+    eventData.eventName = EventName
+    eventData.eventData1 = ""
+    eventData.eventData2 = ""
+    eventData.eventData3 = ""
+    eventData.eventData4 = ""
+    eventData.eventData5 = ""
+    
+    return eventData
+end
 
 -- https://pzwiki.net/wiki/Modding:Lua_Events/LevelPerk
 -- IsoGameCharacter The character whose perk is being leveled up or down.
@@ -104,28 +145,45 @@ Events.OnPlayerDeath.Add(SendPlayerDataDead)
 -- Integer Perk level.
 -- Boolean Whether the perk is being leveled up.
 local function ZKLevelPerk(character, perk, level, levelUp)
-    print("ZKModClient.ZKLevelPerk")
-
-    -- https://zomboid-javadoc.com/41.65/zombie/characters/IsoPlayer.html
-    local player = getPlayer()
-    if not player then
-        print("ZKModClient: SendPlayerData: No player data, exiting")
-        return
-    end
-    
-    local eventData = ZKGetCommonPlayerData()
+    local eventData = ZKGetEventData("LevelPerk")
     if eventData then
-        eventData.eventName = "LevelPerk"
         eventData.eventData1 = perk:getName()
         eventData.eventData2 = level
         eventData.eventData3 = levelUp
-        eventData.eventData4 = ""
-        eventData.eventData5 = ""
-
-        sendClientCommand(player, "ZKMod", "LevelPerk", eventData)
+        local player = getPlayer()
+        local command = "SendEvent"
+        sendClientCommand(player, "ZKMod", command, eventData)
     end
 end
-Events.LevelPerk.Add(ZKLevelPerk)
+
+local function ZKOnGameStart()
+    ZKPrint("ZKModClient.ZKOnGameStart: SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery=" .. SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery)
+    -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
+    -- Default: 2
+
+    if SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery == 1 then
+        Events.EveryTenMinutes.Add(ZKSendPlayerDataAlive)    
+    elseif SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery == 2 then
+        Events.EveryHours.Add(ZKSendPlayerDataAlive)
+    elseif SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery == 3 then
+        Events.EveryDays.Add(ZKSendPlayerDataAlive)
+    end
+
+    ZKPrint("ZKModClient.ZKOnGameStart: SandboxVars.ZKMod.ClientSendPlayerDataDeath=" .. SandboxVars.ZKMod.ClientSendPlayerDataDeath)
+    -- 0: Off, 1: On
+    -- Default: 1
+    if SandboxVars.ZKMod.ClientSendPlayerDataDeath == 1 then
+        Events.OnPlayerDeath.Add(ZKSendPlayerDataDeath)
+    end
+
+    ZKPrint("ZKModClient.ZKOnGameStart: SandboxVars.ZKMod.ClientSendEventLevelPerk=" .. SandboxVars.ZKMod.ClientSendEventLevelPerk)
+    -- 0: Off, 1: On
+    -- Default: 1
+    if SandboxVars.ZKMod.ClientSendEventLevelPerk == 1 then
+        Events.LevelPerk.Add(ZKLevelPerk)
+    end
+end
+Events.OnGameStart.Add(ZKOnGameStart)
 
 --https://pzwiki.net/wiki/Modding:Lua_Events/OnNewFire
 --https://pzwiki.net/wiki/Modding:Lua_Events/OnZombieDead

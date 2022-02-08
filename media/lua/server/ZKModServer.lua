@@ -3,7 +3,7 @@
 
 require "ZKModShared"
 
-print("ZKModServer: isServer=" .. tostring(isServer()))
+ZKPrint("ZKModServer: isServer=" .. tostring(isServer()))
 
 if not isServer() then
     return
@@ -13,7 +13,7 @@ end
 local function SavePlayerData(data, savedead)
     if data then
 
-        print("ZKModServer: data.isAlive=" .. tostring(data.isAlive) .. " savedead=" .. tostring(savedead))
+        ZKPrint("ZKModServer: data.isAlive=" .. tostring(data.isAlive) .. " savedead=" .. tostring(savedead))
 
         -- overwrite client data with server date/time
         data.systemDate = ZKGetSystemDate()
@@ -28,10 +28,10 @@ local function SavePlayerData(data, savedead)
         dataFile:write(strData)
         dataFile:close()
 
-        print("ZKModServer: SavePlayerData: " .. data.username .. " data saved to file")
+        ZKPrint("ZKModServer.SavePlayerData: " .. data.username .. " data saved to file")
 
         if savedead and (not data.isAlive) then
-            print("ZKModServer: SavePlayerData: " .. data.username .. " dead, saving death")
+            ZKPrint("ZKModServer.SavePlayerData: " .. data.username .. " dead, saving death")
             filePath = "/ZKMod/deaths.csv"
             dataFile = getFileWriter(filePath, true, true)
             dataFile:write(strData)
@@ -47,7 +47,7 @@ local function SaveEventData(data)
         data.systemDate = ZKGetSystemDate()
         data.systemTime = ZKGetSystemTime()
 
-        print("ZKModServer: SaveEventData=" .. ZKDump(data))
+        ZKPrint("ZKModServer.SaveEventData: SaveEventData=" .. ZKDump(data))
         local strData = ZKGetCSVLine(data)
 
         local filePath = "/ZKMod/event_history.csv"
@@ -58,55 +58,40 @@ local function SaveEventData(data)
     end
 end
 
--- executed when a client(player) sends its information to the server
-local PlayerDataReceived = function(module, command, player, args)
+-- executed when a client sends its information to the server
+local ZKOnClientCommand = function(module, command, player, args)
+    ZKPrint("ZKModServer.ZKOnClientCommand: module=" .. module .. " command=" .. command .. " username=" .. args.username)
+
     if module ~= "ZKMod" then
         return;
     end
 
     if command == "SendPlayerDataAlive" then
-        print("ZKModServer: " .. command .. " for " .. args.username .. " received")
         SavePlayerData(args, false)
     end
-
     if command == "SendPlayerDataDead" then
-        print("ZKModServer: " .. command .. " for " .. args.username .. " received")
         SavePlayerData(args, true)
     end
-
-    if command == "LevelPerk" then
-        print("ZKModServer: " .. command .. " for " .. args.username .. " received")
+    if command == "SendEvent" then
         SaveEventData(args)
     end
 end
 
--- executed on server every in-game-hour
-local ZKEveryHour = function(module, command, player, args)
-    -- print("ZKModServer.ZKEveryHour")
-
+local ZKSaveWorldHistory = function()
     local worldData = ZKGetWorldData()
 
-    -- print("ZKModServer.ZKEveryHour: worldData: " .. ZKDump(worldData))
-
     local strData = ZKGetCSVLine(worldData)
-    print("ZKModServer.ZKEveryHour: strData: " .. strData)
-
     local filePath = "/ZKMod/world_history.csv"
 
     local dataFile = getFileWriter(filePath, true, true)
     dataFile:write(strData)
     dataFile:close()
 
-    print("ZKModServer.ZKEveryHour: saved to " .. filePath)
+    ZKPrint("ZKModServer.ZKSaveWorldHistory: saved to " .. filePath)
 end
 
--- executed on server every 10 in-game-minutes
-local ZKEveryTenMinutes = function(module, command, player, args)
-    -- print("ZKModServer.ZKEveryTenMinutes")
-
+local ZKSaveWorld = function()
     local worldData = ZKGetWorldData()
-
-    -- print("ZKModServer.ZKEveryTenMinutes: worldData: " .. ZKDump(worldData))
 
     local strHeader = ZKGetCSVHeader(worldData)
     local strData = ZKGetCSVLine(worldData)
@@ -118,20 +103,18 @@ local ZKEveryTenMinutes = function(module, command, player, args)
     dataFile:write(strData)
     dataFile:close()
 
-    print("ZKModServer.ZKEveryTenMinutes: saved to " .. filePath)
+    ZKPrint("ZKModServer.ZKSaveWorld: saved to " .. filePath)
+end
 
-    
+local ZKSaveOnlinePlayers = function()    
     local playerData = ZKGetOnlinePlayers()
-
-    -- print("ZKModServer.ZKEveryHour: worldData: " .. ZKDump(worldData))
 
     filePath = "/ZKMod/players_online.csv"
 
     local dataFile = getFileWriter(filePath, true, false)
     dataFile:write(playerData)
     dataFile:close()
-
-    print("ZKModServer.ZKEveryTenMinutes: saved to " .. filePath)
+    ZKPrint("ZKModServer.ZKSaveOnlinePlayers: saved to " .. filePath)
 end
 
 -- get game world related data
@@ -181,7 +164,7 @@ function ZKGetOnlinePlayers()
 end
 
 local function ZKWriteEvent(username, message)
-    print("ZKModServer.ZKWriteEvent: username=" .. username .. " message=" .. message)
+    ZKPrint("ZKModServer.ZKWriteEvent: username=" .. username .. " message=" .. message)
     local data = {}
     local gt = getGameTime()
 
@@ -200,11 +183,7 @@ local function ZKWriteEvent(username, message)
 end
 
 -- https://pzwiki.net/wiki/Modding:Lua_Events
-Events.OnClientCommand.Add(PlayerDataReceived)
-
-Events.EveryHours.Add(ZKEveryHour)
-Events.EveryTenMinutes.Add(ZKEveryTenMinutes)
-
+Events.OnClientCommand.Add(ZKOnClientCommand)
 
 -- Based on weather function by Snake: http://pzmodding.blogspot.com/
 function ZKGetWeather()
@@ -280,70 +259,254 @@ function ZKGetWeather()
     return weatherData
 end
 
+local ZKSaveSafehouses = function()    
+    
+    -- https://zomboid-javadoc.com/41.65/zombie/iso/areas/SafeHouse.html
+    local safehouses = SafeHouse:getSafehouseList() -- safehouses:size() == 0 
+    
+    ZKPrint("ZKModServer.ZKSaveSafehouses: safehouses.size=" .. safehouses:size())
+    
+    local strHeader = ""
+    local strData = ""
+
+    if safehouses then
+        for i = 0, safehouses:size() - 1 do
+            
+            local data = {}
+
+            local safehouse = safehouses:get(i)
+
+            -- data.id = safehouse:getId() -- "10744,9536 at 1644311215375"
+            data.title = safehouse:getTitle()
+            data.owner = safehouse:getOwner()
+            data.x = safehouse:getX()
+            data.x2 = safehouse:getX2()
+            data.y = safehouse:getY()
+            data.y2 = safehouse:getY2()
+            data.w = safehouse:getW()
+            data.h = safehouse:getH()
+            data.lastVisited = safehouse:getLastVisited()
+            
+            local players = "Players(" .. safehouse:getOwner()
+            local playersList = safehouse:getPlayers()
+
+            ZKPrint("ZKModServer.ZKSaveSafehouses: playersList:size()=" .. playersList:size())
+
+            if playersList then
+                for j = 0, playersList:size() - 1 do
+                    local player = playersList:get(j)
+                    ZKPrint("ZKModServer.ZKSaveSafehouses: j=" .. j .. " player=" .. player)
+                    if player ~= safehouse:getOwner() then                        
+                        players = players .. ", " .. player
+                    end
+                end
+            end
+            players = players .. ")"
+            data.players = players
+
+            if i == 0 then
+                strHeader = ZKGetCSVHeader(data)
+            end
+            strData = strData .. ZKGetCSVLine(data)
+        end
+    end
+
+    filePath = "/ZKMod/safehouses.csv"
+    
+    local dataFile = getFileWriter(filePath, true, false)
+    dataFile:write(strHeader)
+    dataFile:write(strData)
+    dataFile:close()
+
+    ZKPrint("ZKModServer.ZKSaveSafehouses: saved to " .. filePath)
+end
+
+local ZKSaveFactions = function()    
+    
+    -- https://zomboid-javadoc.com/41.65/zombie/characters/Faction.html
+    local factions = Faction:getFactions()
+
+    ZKPrint("ZKModServer.ZKSaveFactions: factions:size()=" .. factions:size())
+
+    local strHeader = ""
+    local strData = ""
+    
+    if factions then
+        local data = {}
+        for i = 0, factions:size() - 1 do
+            local faction = factions:get(i)
+
+            data.name = faction:getName()
+
+            data.owner = faction:getOwner()
+            data.tagName = ""
+            if faction:getTag() then
+                data.tagName = faction:getTag()
+            end
+            data.tagColorR = ""
+            data.tagColorG = ""
+            data.tagColorB = ""
+
+            if faction:getTagColor() then
+                local color = faction:getTagColor():toColor()
+                data.tagColorR = color:getRed()
+                data.tagColorG = color:getGreen()
+                data.tagColorB = color:getBlue()
+            end
+
+            local players = "Players(" .. faction:getOwner()            
+            local playersList = faction:getPlayers()
+
+            ZKPrint("ZKModServer.ZKSaveFactions: playersList:size()=" .. playersList:size())
+
+            if playersList then
+                for j = 0, playersList:size() - 1 do
+                    local player = playersList:get(j)
+                    ZKPrint("ZKModServer.ZKSaveFactions: j=" .. j .. " player=" .. player)
+                    if player ~= faction:getOwner() then
+                        players = players .. ", " .. player
+                    end
+                end
+            end
+            players = players .. ")"
+            data.players = players
+
+            if i == 0 then
+                strHeader = ZKGetCSVHeader(data)
+            end
+            strData = strData .. ZKGetCSVLine(data)
+        end
+    end
+
+    filePath = "/ZKMod/factions.csv"
+    
+    local dataFile = getFileWriter(filePath, true, false)
+    dataFile:write(strHeader)
+    dataFile:write(strData)
+    dataFile:close()
+
+    ZKPrint("ZKModServer.ZKSaveFactions: saved to " .. filePath)
+end
+
+function ZKOnInitWorld()
+    ZKPrint("ZKModServer.OnInitWorld: SandboxVars.ZKMod.ServerSaveWorldEvery=" .. SandboxVars.ZKMod.ServerSaveWorldEvery)
+    -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
+    -- Default: 1
+
+    if SandboxVars.ZKMod.ServerSaveWorldEvery == 1 then
+        Events.EveryTenMinutes.Add(ZKSaveWorldHistory)    
+    elseif SandboxVars.ZKMod.ServerSaveWorldEvery == 2 then
+        Events.EveryHours.Add(ZKSaveWorldHistory)
+    elseif SandboxVars.ZKMod.ServerSaveWorldEvery == 3 then
+        Events.EveryDays.Add(ZKSaveWorldHistory)
+    end
+
+    ZKPrint("ZKModServer.OnInitWorld: SandboxVars.ZKMod.ServerSaveWorldHistoryEvery=" .. SandboxVars.ZKMod.ServerSaveWorldHistoryEvery)
+    -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
+    -- Default: 2
+
+    if SandboxVars.ZKMod.ServerSaveWorldHistoryEvery == 1 then
+        Events.EveryTenMinutes.Add(ZKSaveWorldHistory)    
+    elseif SandboxVars.ZKMod.ServerSaveWorldHistoryEvery == 2 then
+        Events.EveryHours.Add(ZKSaveWorldHistory)
+    elseif SandboxVars.ZKMod.ServerSaveWorldHistoryEvery == 3 then
+        Events.EveryDays.Add(ZKSaveWorldHistory)
+    end
+
+    ZKPrint("ZKModServer.OnInitWorld: SandboxVars.ZKMod.ServerSaveOnlinePlayersEvery=" .. SandboxVars.ZKMod.ServerSaveOnlinePlayersEvery)
+    -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
+    -- Default: 1
+
+    if SandboxVars.ZKMod.ServerSaveOnlinePlayersEvery == 1 then
+        Events.EveryTenMinutes.Add(ZKSaveOnlinePlayers)    
+    elseif SandboxVars.ZKMod.ServerSaveOnlinePlayersEvery == 2 then
+        Events.EveryHours.Add(ZKSaveOnlinePlayers)
+    elseif SandboxVars.ZKMod.ServerSaveOnlinePlayersEvery == 3 then
+        Events.EveryDays.Add(ZKSaveOnlinePlayers)
+    end
+    if SandboxVars.ZKMod.ServerSaveOnlinePlayersEvery > 0 then
+        Events.OnSave.Add(ZKSaveOnlinePlayers)
+    end
+
+    ZKPrint("ZKModServer.OnInitWorld: SandboxVars.ZKMod.ServerSaveSafehousesEvery=" .. SandboxVars.ZKMod.ServerSaveSafehousesEvery)
+    -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
+    -- Default: 2
+
+    if SandboxVars.ZKMod.ServerSaveSafehousesEvery == 1 then
+        Events.EveryTenMinutes.Add(ZKSaveSafehouses)    
+    elseif SandboxVars.ZKMod.ServerSaveSafehousesEvery == 2 then
+        Events.EveryHours.Add(ZKSaveSafehouses)
+    elseif SandboxVars.ZKMod.ServerSaveSafehousesEvery == 3 then
+        Events.EveryDays.Add(ZKSaveSafehouses)
+    end
+
+    ZKPrint("ZKModServer.OnInitWorld: SandboxVars.ZKMod.ServerSaveFactionsEvery=" .. SandboxVars.ZKMod.ServerSaveFactionsEvery)
+    -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
+    -- Default: 2
+
+    if SandboxVars.ZKMod.ServerSaveFactionsEvery == 1 then
+        Events.EveryTenMinutes.Add(ZKSaveFactions)    
+    elseif SandboxVars.ZKMod.ServerSaveFactionsEvery == 2 then
+        Events.EveryHours.Add(ZKSaveFactions)
+    elseif SandboxVars.ZKMod.ServerSaveFactionsEvery == 3 then
+        Events.EveryDays.Add(ZKSaveFactions)
+    end
+end
+Events.OnInitWorld.Add(ZKOnInitWorld)
 
 -- https://pzwiki.net/wiki/Modding:Lua_Events/OnRainStart
-function ZKOnRainStart()
-    print("ZKModServer.ZKOnRainStart")
-    -- ZKWriteEvent("global", "Es beginnt zu regnen.")
-end
-Events.OnRainStart.Add(ZKOnRainStart)
+-- function ZKOnRainStart()
+--     ZKPrint("ZKModServer.ZKOnRainStart")
+-- end
+-- Events.OnRainStart.Add(--ZKOnRainStart)
 
 -- https://pzwiki.net/wiki/Modding:Lua_Events/OnRainStop
-function ZKOnRainStop()
-    print("ZKModServer.ZKOnRainStop")
-    -- ZKWriteEvent("global", "Der Regen hat aufgehört.")
-end
-Events.OnRainStop.Add(ZKOnRainStop)
+-- function ZKOnRainStop()
+--     ZKPrint("ZKModServer.ZKOnRainStop")
+-- end
+-- Events.OnRainStop.Add(ZKOnRainStop)
 
 -- https://pzwiki.net/wiki/Modding:Lua_Events/OnDawn
-function ZKOnDawn()
-    print("ZKModServer.ZKOnDawn")
-    -- ZKWriteEvent("global", "Die Sonne geht auf.")
-end
-Events.OnDawn.Add(ZKOnDawn)
+-- function ZKOnDawn()
+--     ZKPrint("ZKModServer.ZKOnDawn")
+-- end
+-- Events.OnDawn.Add(ZKOnDawn)
 
 -- https://pzwiki.net/wiki/Modding:Lua_Events/OnDusk
-function ZKOnDusk()
-    print("ZKModServer.ZKOnDusk")
-    -- ZKWriteEvent("global", "Die Sonne geht unter.")
-end
-Events.OnDusk.Add(ZKOnDusk)
+-- function ZKOnDusk()
+--     ZKPrint("ZKModServer.ZKOnDusk")
+-- end
+-- Events.OnDusk.Add(ZKOnDusk)
 
 -- https://pzwiki.net/wiki/Modding:Lua_Events/OnChangeWeather
 -- String A string representing the weather. Can be either: "normal", "cloud", "rain", or "sunny"
-function ZKOnChangeWeather(weather)
-    print("ZKModServer.ZKOnChangeWeather")
-    -- print("ZKModServer.ZKOnChangeWeather: weather=" .. weather)
-end
-Events.OnChangeWeather.Add(ZKOnChangeWeather)
+-- function ZKOnChangeWeather(weather)
+--     ZKPrint("ZKModServer.ZKOnChangeWeather")
+-- end
+-- Events.OnChangeWeather.Add(ZKOnChangeWeather)
 
-function ZKOnWeatherPeriodStart(weatherPeriod)
-    print("ZKModServer.ZKOnWeatherPeriodStart")
-    --print(weatherPeriod)
-end
-Events.OnWeatherPeriodStart.Add(ZKOnWeatherPeriodStart)
+-- function ZKOnWeatherPeriodStart(weatherPeriod)
+--     ZKPrint("ZKModServer.ZKOnWeatherPeriodStart")
+-- end
+-- Events.OnWeatherPeriodStart.Add(ZKOnWeatherPeriodStart)
 
 -- works! (called twice?)
-function ZKOnWeatherPeriodStop(weatherPeriod)
-    print("ZKModServer.ZKOnWeatherPeriodStop")
-    --print(weatherPeriod)
-end
-Events.OnWeatherPeriodStop.Add(ZKOnWeatherPeriodStop)
+-- function ZKOnWeatherPeriodStop(weatherPeriod)
+--     ZKPrint("ZKModServer.ZKOnWeatherPeriodStop")
+-- end
+-- Events.OnWeatherPeriodStop.Add(ZKOnWeatherPeriodStop)
 
-function ZKOnWeatherPeriodComplete(weatherPeriod)
-    print("ZKModServer.ZKOnWeatherPeriodComplete")
-    --print(weatherPeriod)
-end
-Events.OnWeatherPeriodComplete.Add(ZKOnWeatherPeriodComplete)
+-- function ZKOnWeatherPeriodComplete(weatherPeriod)
+--     ZKPrint("ZKModServer.ZKOnWeatherPeriodComplete")
+-- end
+-- Events.OnWeatherPeriodComplete.Add(ZKOnWeatherPeriodComplete)
 
--- works!
-function ZKOnWeatherPeriodStage(weatherPeriod)
-    -- https://zomboid-javadoc.com/41.65/zombie/iso/weather/WeatherPeriod.html
-    print("ZKModServer.ZKOnWeatherPeriodStage")
-    print(weatherPeriod)
-end
-Events.OnWeatherPeriodStage.Add(ZKOnWeatherPeriodStage)
+-- works on server
+-- https://zomboid-javadoc.com/41.65/zombie/iso/weather/WeatherPeriod.html
+-- function ZKOnWeatherPeriodStage(weatherPeriod)
+--     ZKPrint("ZKModServer.ZKOnWeatherPeriodStage")
+-- end
+-- Events.OnWeatherPeriodStage.Add(ZKOnWeatherPeriodStage)
 
-Events.OnRainStart.Add(ZKOnRainStart)
-Events.OnRainStop.Add(ZKOnRainStop)
-
+-- Events.OnRainStart.Add(ZKOnRainStart)
+-- Events.OnRainStop.Add(ZKOnRainStop)

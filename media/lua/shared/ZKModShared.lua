@@ -68,3 +68,7 @@ function ZKDump(o)
  function ZKGetSystemTime()
     return tostring(os.date("%H:%M:%S",  os.time() + 1 * 60 * 60))
  end
+
+ function ZKPrint(msg)
+    print(ZKGetSystemDate() .. " " .. ZKGetSystemTime() .. "> " .. msg)
+ end

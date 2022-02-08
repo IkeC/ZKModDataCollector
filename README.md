@@ -3,6 +3,28 @@ ZKMod is a Project Zomboid Steam Workshop Mod to collect and save player and wor
 
 Workshop ID: 2733284288 / Mod ID: ZKMod
 
+# Configuration
+You may configure or turn features off in *<servername>_SandboxVars.lua*. If you don't configure anything default values are used.
+  
+Example configuration:
+```
+SandboxVars = {
+    [...]
+    ZKMod = {
+        ServerSaveWorldEvery = 1,
+        ServerSaveWorldHistoryEvery = 2,
+        ServerSaveOnlinePlayersEvery = 1,
+        ServerSaveSafehousesEvery = 3,
+        ServerSaveFactionsEvery = 3,
+        ClientSendPlayerDataAliveEvery = 2,
+        ClientSendPlayerDataDeath = 1,
+        ClientSendEventLevelPerk = 1,
+    },
+}
+```
+All options: https://github.com/IkeC/ZKMod/blob/master/media/sandbox-options.txt
+
+
 # Changelog
 
 ## ZKMod 1.2 (2022-02-08)

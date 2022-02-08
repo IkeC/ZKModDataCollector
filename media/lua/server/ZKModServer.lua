@@ -390,11 +390,11 @@ function ZKOnInitWorld()
     -- Default: 1
 
     if SandboxVars.ZKMod.ServerSaveWorldEvery == 1 then
-        Events.EveryTenMinutes.Add(ZKSaveWorldHistory)    
+        Events.EveryTenMinutes.Add(ZKSaveWorld)    
     elseif SandboxVars.ZKMod.ServerSaveWorldEvery == 2 then
-        Events.EveryHours.Add(ZKSaveWorldHistory)
+        Events.EveryHours.Add(ZKSaveWorld)
     elseif SandboxVars.ZKMod.ServerSaveWorldEvery == 3 then
-        Events.EveryDays.Add(ZKSaveWorldHistory)
+        Events.EveryDays.Add(ZKSaveWorld)
     end
 
     ZKPrint("ZKModServer.OnInitWorld: SandboxVars.ZKMod.ServerSaveWorldHistoryEvery=" .. SandboxVars.ZKMod.ServerSaveWorldHistoryEvery)

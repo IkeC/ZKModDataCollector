@@ -1,6 +1,8 @@
 # Description
 ZKMod is a Project Zomboid Steam Workshop Mod to collect and save player and world statistics on the server.
 
+Mod page on Steam: https://steamcommunity.com/sharedfiles/filedetails/?id=2733284288
+
 Workshop ID: 2733284288 / Mod ID: ZKMod
 
 # Configuration
@@ -22,7 +24,7 @@ SandboxVars = {
     },
 }
 ```
-All options: https://github.com/IkeC/ZKMod/blob/master/media/sandbox-options.txt
+All options and possible values: https://github.com/IkeC/ZKMod/blob/master/media/sandbox-options.txt
 
 
 # Changelog

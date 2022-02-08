@@ -103,13 +103,35 @@ local function SendPlayerData(isdead)
         end
 
         -- https://zomboid-javadoc.com/41.65/zombie/iso/areas/SafeHouse.html
-        local safehouse = SafeHouse.getSafeHouse(player:getSquare())
+        local safehouse = SafeHouse.hasSafehouse(player)
+        -- local safehouse = SafeHouse.getSafeHouse(player:getSquare())
+
         if safehouse then
-            playerData.safehouseTitle = safehouse:getTtile()
-            playerData.safehouseX = safehouse:getX()
-            playerData.safehouseX2 = safehouse:getX2()
-            playerData.safehouseY = safehouse:getY()
-            playerData.safehouseY2 = safehouse:getY2()
+            if safehouse:getTitle() then
+                playerData.safehouseTitle = safehouse:getTitle()
+            else
+                playerData.safehouseTitle = ""
+            end
+            if safehouse:getX() then
+                playerData.safehouseX = safehouse:getX()
+            else
+                playerData.safehouseX = ""
+            end
+            if safehouse:getX2() then
+                playerData.safehouseX2 = safehouse:getX2()
+            else
+                playerData.safehouseX2 = ""
+            end
+            if safehouse:getY() then
+                playerData.safehouseY = safehouse:getY()
+            else
+                playerData.safehouseY = ""
+            end
+            if safehouse:getY2() then
+                playerData.safehouseY2 = safehouse:getY2()
+            else
+                playerData.safehouseY2 = ""
+            end
             -- ZKPrint("safehouse: title=" .. safehouse:getTitle() .. " X=" .. safehouse:getX() .. " Y=" .. safehouse:getY() ..  " X2=" .. safehouse:getX2() .. " Y2=" .. safehouse:getY2())
         else
             playerData.safehouseTitle = ""

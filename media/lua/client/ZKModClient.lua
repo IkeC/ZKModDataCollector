@@ -81,7 +81,11 @@ local function SendPlayerData(isdead)
         if faction then
             
             playerData.factionName = faction:getName()
-            playerData.factionTag = faction:getTag()
+            if faction:getTag() then
+                playerData.factionTag = faction:getTag()
+            else
+                playerData.factionTag = ""
+            end
             
             playerData.factionTagColorR = ""
             playerData.factionTagColorG = ""

@@ -1,6 +1,6 @@
-name=ZKMod
+name=ZKMod Data Collector
 id=ZKMod
-description=Collects and saves world and player data on your server.
+description=Collects and saves world and player data on your server in CSV files.
 description=
-description=All details here: https://github.com/IkeC/ZKMod/blob/master/README.md
+description=All details here: https://github.com/IkeC/ZKModDataCollector/blob/main/README.md
 poster=poster.png

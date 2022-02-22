@@ -6,14 +6,15 @@ if isServer() then
     return
 end
 
+ZKPrint("Mod version: v1.3")
+
 local function ZKGetCommonPlayerData()
-    ZKPrint("ZKModClient.ZKGetCommonPlayerData")
 
     -- https://zomboid-javadoc.com/41.65/zombie/characters/IsoPlayer.html
     local player = getPlayer()
 
     if not player then
-        ZKPrint("ZKModClient.ZKGetCommonPlayerData: No player data, exiting")
+        ZKPrint("ZKGetCommonPlayerData: No player data, exiting")
         return
     end
 
@@ -37,15 +38,14 @@ local function ZKGetCommonPlayerData()
     return playerData
 end
 
--- Called on the player to parse its player data and send it to the server every ten (in-game) minutes
 local function SendPlayerData(isdead)
 
-    ZKPrint("ZKModClient.SendPlayerData: isdead=" .. tostring(isdead))
+    ZKPrint("SendPlayerData: isdead=" .. tostring(isdead))
 
     -- https://zomboid-javadoc.com/41.65/zombie/characters/IsoPlayer.html
     local player = getPlayer()
     if not player then
-        ZKPrint("ZKModClient.SendPlayerData: No player data, exiting")
+        ZKPrint("SendPlayerData: No player data, exiting")
         return
     end
 
@@ -80,7 +80,11 @@ local function SendPlayerData(isdead)
         local faction = Faction.getPlayerFaction(player)
         if faction then
             
-            playerData.factionName = faction:getName()
+            if faction:getName() then
+                playerData.factionName = faction:getName()
+            else
+                playerData.factionName = ""
+            end
             if faction:getTag() then
                 playerData.factionTag = faction:getTag()
             else
@@ -168,12 +172,23 @@ local function SendPlayerData(isdead)
         playerData.favoriteWeapon = favoriteWeapon;
         playerData.favoriteWeaponHit = favoriteWeaponHit;
 
+        local damage = player:getBodyDamage()
+        
+        if damage then
+            playerData.hasInjury = damage:HasInjury()
+            playerData.health =  string.format("%.1f", damage:getHealth())
+            playerData.wetness = string.format("%.1f", damage:getWetness())
+            playerData.boredom = string.format("%.1f", damage:getBoredomLevel())
+            playerData.infectionLevel = string.format("%.1f", damage:getInfectionLevel())
+            playerData.fakeInfectionLevel = string.format("%.1f", damage:getFakeInfectionLevel())
+        end 
+
         local command = "SendPlayerDataAlive"
         if isdead then
             command = "SendPlayerDataDead"
         end
 
-        ZKPrint("ZKModClient.SendPlayerData: command=" .. command .. " username=" .. playerData.username)
+        ZKPrint("SendPlayerData: command=" .. command .. " username=" .. playerData.username)
 
         sendClientCommand(player, "ZKMod", command, playerData)
     end
@@ -199,6 +214,64 @@ local function ZKGetEventData(EventName)
     return eventData
 end
 
+local function ZKSendPlayerPerksData()
+
+    -- https://zomboid-javadoc.com/41.65/zombie/characters/IsoPlayer.html
+    local player = getPlayer()
+    if not player then
+        ZKPrint("SendPlayerPerksData: No player data, exiting")
+        return
+    end
+
+    local playerData = ZKGetCommonPlayerData()
+
+    if playerData then
+    
+        playerData.Agility = player:getPerkLevel(Perks.Agility)
+        playerData.Aiming = player:getPerkLevel(Perks.Aiming)
+        playerData.Axe = player:getPerkLevel(Perks.Axe)
+        playerData.Blacksmith = player:getPerkLevel(Perks.Blacksmith)
+        playerData.Blunt = player:getPerkLevel(Perks.Blunt)
+        playerData.Combat = player:getPerkLevel(Perks.Combat)
+        playerData.Cooking = player:getPerkLevel(Perks.Cooking)
+        playerData.Crafting = player:getPerkLevel(Perks.Crafting)
+        playerData.Doctor = player:getPerkLevel(Perks.Doctor)
+        playerData.Electricity = player:getPerkLevel(Perks.Electricity)
+        playerData.Farming = player:getPerkLevel(Perks.Farming)
+        playerData.Firearm = player:getPerkLevel(Perks.Firearm)
+        playerData.Fishing = player:getPerkLevel(Perks.Fishing)
+        playerData.Fitness = player:getPerkLevel(Perks.Fitness)
+        playerData.Lightfoot = player:getPerkLevel(Perks.Lightfoot)
+        playerData.LongBlade = player:getPerkLevel(Perks.LongBlade)
+        playerData.Maintenance = player:getPerkLevel(Perks.Maintenance)
+        --playerData.MAX = player:getPerkLevel(Perks.MAX)
+        playerData.Mechanics = player:getPerkLevel(Perks.Mechanics)
+        playerData.Melee = player:getPerkLevel(Perks.Melee)
+        playerData.Melting = player:getPerkLevel(Perks.Melting)
+        playerData.MetalWelding = player:getPerkLevel(Perks.MetalWelding)
+        playerData.Nimble = player:getPerkLevel(Perks.Nimble)
+        --playerData.None = player:getPerkLevel(Perks.None)
+        --playerData.Passiv = player:getPerkLevel(Perks.Passiv)
+        playerData.PlantScavenging = player:getPerkLevel(Perks.PlantScavenging)
+        playerData.Reloading = player:getPerkLevel(Perks.Reloading)
+        playerData.SmallBlade = player:getPerkLevel(Perks.SmallBlade)
+        playerData.SmallBlunt = player:getPerkLevel(Perks.SmallBlunt)
+        playerData.Sneak = player:getPerkLevel(Perks.Sneak)
+        playerData.Spear = player:getPerkLevel(Perks.Spear)
+        playerData.Sprinting = player:getPerkLevel(Perks.Sprinting)
+        playerData.Strength = player:getPerkLevel(Perks.Strength)
+        playerData.Survivalist = player:getPerkLevel(Perks.Survivalist)
+        playerData.Tailoring = player:getPerkLevel(Perks.Tailoring)
+        playerData.Trapping = player:getPerkLevel(Perks.Trapping)
+        playerData.Woodwork = player:getPerkLevel(Perks.Woodwork)
+    
+        local command = "SendPlayerPerksData"
+        ZKPrint("SendPlayerPerksData: command=" .. command .. " username=" .. playerData.username)
+
+        sendClientCommand(player, "ZKMod", command, playerData)
+    end
+end
+
 -- https://pzwiki.net/wiki/Modding:Lua_Events/LevelPerk
 -- IsoGameCharacter The character whose perk is being leveled up or down.
 -- https://zomboid-javadoc.com/41.65/zombie/characters/skills/PerkFactory.Perk.html The perk being leveled up or down.
@@ -214,11 +287,12 @@ local function ZKLevelPerk(character, perk, level, levelUp)
         local command = "SendEvent"
         sendClientCommand(player, "ZKMod", command, eventData)
     end
+
+    ZKSendPlayerPerksData()
 end
 
 local function ZKOnGameStart()
-    ZKPrint("ZKModClient.ZKOnGameStart: SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery=" ..
-                SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery)
+    ZKPrint("ZKOnGameStart: SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery=" .. SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery)
     -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
     -- Default: 2
 
@@ -230,21 +304,30 @@ local function ZKOnGameStart()
         Events.EveryDays.Add(ZKSendPlayerDataAlive)
     end
 
-    ZKPrint("ZKModClient.ZKOnGameStart: SandboxVars.ZKMod.ClientSendPlayerDataDeath=" ..
-                SandboxVars.ZKMod.ClientSendPlayerDataDeath)
+    ZKPrint("ZKOnGameStart: SandboxVars.ZKMod.ClientSendPlayerDataDeath=" .. SandboxVars.ZKMod.ClientSendPlayerDataDeath)
     -- 0: Off, 1: On
     -- Default: 1
     if SandboxVars.ZKMod.ClientSendPlayerDataDeath == 1 then
         Events.OnPlayerDeath.Add(ZKSendPlayerDataDeath)
     end
 
-    ZKPrint("ZKModClient.ZKOnGameStart: SandboxVars.ZKMod.ClientSendEventLevelPerk=" ..
-                SandboxVars.ZKMod.ClientSendEventLevelPerk)
+    ZKPrint("ZKOnGameStart: SandboxVars.ZKMod.ClientSendEventLevelPerk=" .. SandboxVars.ZKMod.ClientSendEventLevelPerk)
     -- 0: Off, 1: On
     -- Default: 1
     if SandboxVars.ZKMod.ClientSendEventLevelPerk == 1 then
         Events.LevelPerk.Add(ZKLevelPerk)
     end
+
+    -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
+    -- Default: 3
+    if SandboxVars.ZKMod.ClientSendPlayerPerksDataEvery == 1 then
+        Events.EveryTenMinutes.Add(ZKSendPlayerPerksData)
+    elseif SandboxVars.ZKMod.ClientSendPlayerPerksDataEvery == 2 then
+        Events.EveryHours.Add(ZKSendPlayerPerksData)
+    elseif SandboxVars.ZKMod.ClientSendPlayerPerksDataEvery == 3 then
+        Events.EveryDays.Add(ZKSendPlayerPerksData)
+    end
+
 end
 Events.OnGameStart.Add(ZKOnGameStart)
 

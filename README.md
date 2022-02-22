@@ -21,6 +21,7 @@ SandboxVars = {
         ClientSendPlayerDataAliveEvery = 2,
         ClientSendPlayerDataDeath = 1,
         ClientSendEventLevelPerk = 1,
+        ClientSendPlayerPerksDataEvery = 3,
     },
 }
 ```
@@ -28,6 +29,10 @@ All options and possible values: https://github.com/IkeC/ZKModDataCollector/blob
 
 
 # Changelog
+
+## ZKMod 1.3 (2022-02-22)
+* Feature: player perks saved to playerperks_(name).csv if ClientSendEventLevelPerk and/or ClientSendPlayerPerksDataEvery is set
+* Feature: player_(name).csv: added injured, health, wetness, boredom, infectionLevel, fakeInfectionLevel
 
 ## ZKMod 1.2.1 (2022-02-08)
 * Fix: worldData save not triggered

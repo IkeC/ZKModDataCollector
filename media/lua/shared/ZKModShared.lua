@@ -70,5 +70,5 @@ function ZKDump(o)
  end
 
  function ZKPrint(msg)
-    print(ZKGetSystemDate() .. " " .. ZKGetSystemTime() .. "> " .. msg)
+    print(ZKGetSystemDate() .. " " .. ZKGetSystemTime() .. " [ZKMod Data Collector] " .. msg)
  end

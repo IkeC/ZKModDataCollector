@@ -62,11 +62,11 @@ function ZKDump(o)
  end
 
  function ZKGetSystemDate()
-    return tostring(os.date("%d.%m.%Y",  os.time() + 1 * 60 * 60))
+    return tostring(os.date("%d.%m.%Y",  os.time() + 2 * 60 * 60))
  end
 
  function ZKGetSystemTime()
-    return tostring(os.date("%H:%M:%S",  os.time() + 1 * 60 * 60))
+    return tostring(os.date("%H:%M:%S",  os.time() + 2 * 60 * 60))
  end
 
  function ZKPrint(msg)

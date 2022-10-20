@@ -6,7 +6,7 @@ if isServer() then
     return
 end
 
-ZKPrint("Mod version: v1.3")
+ZKPrint("Mod version: v1.3.1")
 
 local function ZKGetCommonPlayerData()
 

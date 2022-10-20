@@ -30,6 +30,9 @@ All options and possible values: https://github.com/IkeC/ZKModDataCollector/blob
 
 # Changelog
 
+## ZKMod 1.3.1 (2022-10-20)
+* Fix: String values containing " or ; were not escaped properly, possibly causing invalid CSV lines
+
 ## ZKMod 1.3 (2022-02-22)
 * Feature: player perks saved to playerperks_(name).csv if ClientSendEventLevelPerk and/or ClientSendPlayerPerksDataEvery is set
 * Feature: player_(name).csv: added injured, health, wetness, boredom, infectionLevel, fakeInfectionLevel

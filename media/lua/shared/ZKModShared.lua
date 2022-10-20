@@ -29,6 +29,7 @@ end
 function ZKGetCSVLine(data)
     local strData = ""
     local separator = ""
+    local escapedValue = ""
 
     -- fill data on next line
     for k,v in pairs(data) do
@@ -37,8 +38,11 @@ function ZKGetCSVLine(data)
         end
         
         if type(v)=="string" then
-            strData = strData .. separator ..  "\"" .. v .. "\""
+            escapedValue = v:gsub("\"","''")
+            escapedValue = escapedValue:gsub(";",",")
+            strData = strData .. separator ..  "\"" .. escapedValue .. "\""
         else
+
             strData = strData .. separator .. tostring(v)
         end
     end

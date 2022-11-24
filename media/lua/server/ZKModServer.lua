@@ -7,7 +7,7 @@ if not isServer() then
     return
 end
 
-ZKPrint("Mod version: v1.4")
+ZKPrint("Mod version: v1.4.1")
 
 -- Parse player data and save it to a .csv file inside Lua/ZKMod/ folder
 local function SavePlayerData(data, savedead)
@@ -64,7 +64,7 @@ end
 
 local function SavePlayerInventoryData(lines)
     if lines then
-        -- ZKPrint("SavePlayerInventoryData")
+        --ZKPrint("SavePlayerInventoryData")
 
         local filePath = ""
         local dataFile

@@ -31,6 +31,10 @@ All options and possible values: https://github.com/IkeC/ZKModDataCollector/blob
 
 # Changelog
 
+## ZKMod 1.4.1 (2022-11-24)
+* Feature: player inventory saved once after connecting in addition to the periodic saving
+* Fix: Weapon parts/magazines not saved correctly
+
 ## ZKMod 1.4 (2022-11-24)
 * Feature: player inventory saved to playerinventory_(name).csv if ClientSendPlayerInventoryDataEvery is set
 

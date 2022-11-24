@@ -6,7 +6,7 @@ if isServer() then
     return
 end
 
-ZKPrint("Mod version: v1.4")
+ZKPrint("Mod version: v1.4.1")
 
 local function ZKGetCommonPlayerData()
 
@@ -324,14 +324,14 @@ function ZKSaveItemContainer(lines, playerData, itemIndex, itemContainer)
             line.ItemDisplayName = item:getDisplayName()
             line.ItemExtraInfo = ""
 
-            ZKPrint("ZKSaveItemContainer: line=" .. ZKDump(line))
+            --ZKPrint("ZKSaveItemContainer: line=" .. ZKDump(line))
 
             table.insert(lines, line)
 
             if item:getCategory() == "Container" then
-                ZKSaveItemContainer(lines, playerData, currentItemIndex, item:getInventory());
+                ZKSaveItemContainer(lines, playerData, currentItemIndex, item:getInventory())
             elseif item:getCategory() == "Weapon" then
-                ZKSaveItemWeaponPart(lines, playerData, currentItemIndex, item);
+                ZKSaveItemWeaponPart(lines, playerData, currentItemIndex, item)
                 ZKSaveItemWeaponMagazine(lines, playerData, currentItemIndex, item)
             end
         end
@@ -353,12 +353,12 @@ function ZKSaveItemWeaponPart(lines, playerData, itemIndex, weaponItem)
             end
             line.ItemIndex = currentItemIndex
             
-            line.ItemCategory = item:getCategory()
+            line.ItemCategory = "WeaponPart"
             line.ItemId = itemId
-            line.ItemDisplayName = item:getDisplayName()
+            line.ItemDisplayName = ""
             line.ItemExtraInfo = ""
 
-            -- ZKPrint("ZKSaveItemWeaponPart: line=" .. ZKDump(line))
+            --ZKPrint("ZKSaveItemWeaponPart: line=" .. ZKDump(line))
 
             table.insert(lines, line)
         end
@@ -381,12 +381,12 @@ function ZKSaveItemWeaponMagazine(lines, playerData, itemIndex, weaponItem)
         end
         line.ItemIndex = currentItemIndex
         
-        line.ItemCategory = item:getCategory()
-        line.ItemId = itemId
-        line.ItemDisplayName = item:getDisplayName()
-        line.ItemExtraInfo = "magazineType=" .. magazineType .. " ammo=" .. nbAmmo
+        line.ItemCategory = "HandWeaponClip"
+        line.ItemId = magazineType
+        line.ItemDisplayName = weaponItem:getDisplayName()
+        line.ItemExtraInfo = "ammo=" .. nbAmmo
 
-        ZKPrint("ZKSaveItemWeaponPart: line=" .. ZKDump(line))
+        --ZKPrint("ZKSaveItemWeaponMagazine: line=" .. ZKDump(line))
 
         table.insert(lines, line)
     end
@@ -409,6 +409,12 @@ local function ZKLevelPerk(character, perk, level, levelUp)
     end
 
     ZKSendPlayerPerksData()
+end
+
+local function ZKSendPlayerInventoryDataStart()
+    ZKPrint("ZKSendPlayerInventoryDataStart")
+    ZKSendPlayerInventoryData()
+    Events.EveryTenMinutes.Remove(ZKSendPlayerInventoryDataStart)
 end
 
 local function ZKOnGameStart()
@@ -461,6 +467,12 @@ local function ZKOnGameStart()
         Events.EveryHours.Add(ZKSendPlayerInventoryData)
     elseif SandboxVars.ZKMod.ClientSendPlayerInventoryDataEvery == 3 then
         Events.EveryDays.Add(ZKSendPlayerInventoryData)
+    end
+
+    -- also do once on join
+    if SandboxVars.ZKMod.ClientSendPlayerInventoryDataEvery > 1 then
+        ZKPrint("ZKOnGameStart: adding ZKSendPlayerInventoryDataStart")
+        Events.EveryTenMinutes.Add(ZKSendPlayerInventoryDataStart)
     end
 end
 Events.OnGameStart.Add(ZKOnGameStart)

@@ -53,3 +53,9 @@ option ZKMod.ClientSendPlayerPerksDataEvery
 	type = integer, min = 0, max = 3, default = 3,
 	description = "0: Off | 1: EveryTenMinutes | 2: EveryHours | 3: EveryDays"
 }
+
+option ZKMod.ClientSendPlayerInventoryDataEvery
+{
+	type = integer, min = 0, max = 3, default = 3,
+	description = "0: Off | 1: EveryTenMinutes | 2: EveryHours | 3: EveryDays"
+}

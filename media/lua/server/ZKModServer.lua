@@ -7,7 +7,7 @@ if not isServer() then
     return
 end
 
-ZKPrint("Mod version: v1.3.1")
+ZKPrint("Mod version: v1.4")
 
 -- Parse player data and save it to a .csv file inside Lua/ZKMod/ folder
 local function SavePlayerData(data, savedead)
@@ -62,6 +62,42 @@ local function SavePlayerPerksData(data)
     end
 end
 
+local function SavePlayerInventoryData(lines)
+    if lines then
+        -- ZKPrint("SavePlayerInventoryData")
+
+        local filePath = ""
+        local dataFile
+        local lineCount = 0
+
+        -- overwrite client data with server date/time
+        local localDate = ZKGetSystemDate()
+        local localTime = ZKGetSystemTime()
+
+        --ZKPrint("SavePlayerInventoryData: lines=".. ZKDump(lines))
+        --ZKPrint("SavePlayerInventoryData: type=".. type(lines))
+
+        for key, line in pairs(lines) do
+            --ZKPrint("SavePlayerInventoryData: line=".. ZKDump(line))
+
+            if filePath == "" then
+                filePath = "/ZKMod/playerinventory_" .. line.username .. ".csv"
+                dataFile = getFileWriter(filePath, true, true)
+            end
+            
+            line.systemDate = localDate
+            line.systemTime = localTime
+            local strData = ZKGetCSVLine(line)
+            dataFile:write(strData)
+
+            lineCount = lineCount + 1
+        end
+        dataFile:close()
+        
+        ZKPrint("SavePlayerInventoryData: saved " .. lineCount .. " line(s) to " .. filePath)
+    end
+end
+
 -- Parse player event data and save it to event_history.csv file inside Lua/ZKMod/ folder
 local function SaveEventData(data)
     if data then
@@ -96,6 +132,9 @@ local ZKOnClientCommand = function(module, command, player, args)
     end
     if command == "SendPlayerPerksData" then
         SavePlayerPerksData(args)
+    end
+    if command == "SendPlayerInventoryData" then
+        SavePlayerInventoryData(args)
     end
     if command == "SendEvent" then
         SaveEventData(args)
@@ -474,6 +513,7 @@ function ZKOnInitWorld()
     end
 
 end
+
 Events.OnInitWorld.Add(ZKOnInitWorld)
 
 -- https://pzwiki.net/wiki/Modding:Lua_Events/OnRainStart

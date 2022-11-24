@@ -22,6 +22,7 @@ SandboxVars = {
         ClientSendPlayerDataDeath = 1,
         ClientSendEventLevelPerk = 1,
         ClientSendPlayerPerksDataEvery = 3,
+        ClientSendPlayerInventoryDataEvery = 3,
     },
 }
 ```
@@ -29,6 +30,9 @@ All options and possible values: https://github.com/IkeC/ZKModDataCollector/blob
 
 
 # Changelog
+
+## ZKMod 1.4 (2022-11-24)
+* Feature: player inventory saved to playerinventory_(name).csv if ClientSendPlayerInventoryDataEvery is set
 
 ## ZKMod 1.3.1 (2022-10-20)
 * Fix: String values containing " or ; were not escaped properly, possibly causing invalid CSV lines

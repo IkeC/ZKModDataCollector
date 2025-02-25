@@ -1,0 +1,10 @@
+name=ZKMod Data Collector
+id=ZKMod
+description=Collects and saves world and player data on your server in CSV files.
+description=
+description=[URL=https://github.com/IkeC/ZKModDataCollector/blob/main/README.md]Click here for full documentation[/url]
+description=
+description=Tested and working on builds 41/42, SP and MP. Please leave a thumbs up if useful.
+description=
+description=[img]https://i.imgur.com/p7Fv1Z6.gif[/img]
+poster=poster.png

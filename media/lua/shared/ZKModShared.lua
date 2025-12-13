@@ -1,9 +1,22 @@
 -- Made by IkeC
 -- CSV saving based on "Server Players Data" by Lemos: https://steamcommunity.com/sharedfiles/filedetails/?id=2695733462
+local function ZKGetTimeOffsetSeconds()
+    if not SandboxVars or not SandboxVars.ZKMod then
+        return 0
+    end
+
+    local offsetMinutes = SandboxVars.ZKMod.ServerTimeOffsetMinutes or 0
+    return offsetMinutes * 60
+end
+
+local function ZKGetAdjustedTimestamp()
+    return os.time() + ZKGetTimeOffsetSeconds()
+end
+
 function ZKGetGameTimeString(gt)
     local minutes = string.format("%02d", gt:getMinutes())
-    local result = gt:getDay() + 1 .. "." .. gt:getMonth() + 1 .. "." .. gt:getYear() .. " " .. gt:getHour() .. ":" ..
-                       minutes
+    local result = (gt:getDay() + 1) .. "." .. (gt:getMonth() + 1) .. "." .. gt:getYear() .. " " .. gt:getHour() ..
+                       ":" .. minutes
 
     return result
 end
@@ -67,11 +80,11 @@ function ZKDump(o)
 end
 
 function ZKGetSystemDate()
-    return tostring(os.date("%d.%m.%Y", os.time() + 2 * 60 * 60))
+    return tostring(os.date("%d.%m.%Y", ZKGetAdjustedTimestamp()))
 end
 
 function ZKGetSystemTime()
-    return tostring(os.date("%H:%M:%S", os.time() + 2 * 60 * 60))
+    return tostring(os.date("%H:%M:%S", ZKGetAdjustedTimestamp()))
 end
 
 function ZKPrint(msg)

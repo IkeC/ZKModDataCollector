@@ -7,7 +7,16 @@ if not isServer() then
     return
 end
 
-ZKPrint("Mod version: v1.4.1")
+ZKPrint("Mod version: v1.5.0 (Build 42.13)")
+
+local function ZKGetFileWriterSafe(filePath, createDirs, append)
+    local writer = getFileWriter(filePath, createDirs, append)
+    if not writer then
+        ZKPrint("ZKGetFileWriterSafe: failed to open " .. filePath)
+        return nil
+    end
+    return writer
+end
 
 -- Parse player data and save it to a .csv file inside Lua/ZKMod/ folder
 local function SavePlayerData(data, savedead)
@@ -23,19 +32,22 @@ local function SavePlayerData(data, savedead)
         local strData = ZKGetCSVLine(data)
 
         local filePath = "/ZKMod/player_" .. data.username .. ".csv"
-        local dataFile = getFileWriter(filePath, true, false)
-        dataFile:write(strHeader)
-        dataFile:write(strData)
-        dataFile:close()
-
-        ZKPrint("SavePlayerData: saved to " .. filePath)
+        local dataFile = ZKGetFileWriterSafe(filePath, true, false)
+        if dataFile then
+            dataFile:write(strHeader)
+            dataFile:write(strData)
+            dataFile:close()
+            ZKPrint("SavePlayerData: saved to " .. filePath)
+        end
 
         if savedead and (not data.isAlive) then
             filePath = "/ZKMod/deaths.csv"
             ZKPrint("SavePlayerData: " .. data.username .. " dead, saving to " .. filePath)
-            dataFile = getFileWriter(filePath, true, true)
-            dataFile:write(strData)
-            dataFile:close()
+            dataFile = ZKGetFileWriterSafe(filePath, true, true)
+            if dataFile then
+                dataFile:write(strData)
+                dataFile:close()
+            end
         end
     end
 end
@@ -53,12 +65,13 @@ local function SavePlayerPerksData(data)
         local strData = ZKGetCSVLine(data)
 
         local filePath = "/ZKMod/playerperks_" .. data.username .. ".csv"
-        local dataFile = getFileWriter(filePath, true, false)
-        dataFile:write(strHeader)
-        dataFile:write(strData)
-        dataFile:close()
-
-        ZKPrint("SavePlayerPerksData: saved to " .. filePath)
+        local dataFile = ZKGetFileWriterSafe(filePath, true, false)
+        if dataFile then
+            dataFile:write(strHeader)
+            dataFile:write(strData)
+            dataFile:close()
+            ZKPrint("SavePlayerPerksData: saved to " .. filePath)
+        end
     end
 end
 
@@ -82,7 +95,10 @@ local function SavePlayerInventoryData(lines)
 
             if filePath == "" then
                 filePath = "/ZKMod/playerinventory_" .. line.username .. ".csv"
-                dataFile = getFileWriter(filePath, true, true)
+                dataFile = ZKGetFileWriterSafe(filePath, true, true)
+                if not dataFile then
+                    return
+                end
             end
             
             line.systemDate = localDate
@@ -92,9 +108,10 @@ local function SavePlayerInventoryData(lines)
 
             lineCount = lineCount + 1
         end
-        dataFile:close()
-        
-        ZKPrint("SavePlayerInventoryData: saved " .. lineCount .. " line(s) to " .. filePath)
+        if dataFile then
+            dataFile:close()
+            ZKPrint("SavePlayerInventoryData: saved " .. lineCount .. " line(s) to " .. filePath)
+        end
     end
 end
 
@@ -109,10 +126,11 @@ local function SaveEventData(data)
         local strData = ZKGetCSVLine(data)
 
         local filePath = "/ZKMod/event_history.csv"
-        local dataFile = getFileWriter(filePath, true, true)
-
-        dataFile:write(strData)
-        dataFile:close()
+        local dataFile = ZKGetFileWriterSafe(filePath, true, true)
+        if dataFile then
+            dataFile:write(strData)
+            dataFile:close()
+        end
     end
 end
 
@@ -147,11 +165,12 @@ local ZKSaveWorldHistory = function()
     local strData = ZKGetCSVLine(worldData)
     local filePath = "/ZKMod/world_history.csv"
 
-    local dataFile = getFileWriter(filePath, true, true)
-    dataFile:write(strData)
-    dataFile:close()
-
-    ZKPrint("ZKSaveWorldHistory: saved to " .. filePath)
+    local dataFile = ZKGetFileWriterSafe(filePath, true, true)
+    if dataFile then
+        dataFile:write(strData)
+        dataFile:close()
+        ZKPrint("ZKSaveWorldHistory: saved to " .. filePath)
+    end
 end
 
 local ZKSaveWorld = function()
@@ -161,24 +180,28 @@ local ZKSaveWorld = function()
     local strData = ZKGetCSVLine(worldData)
 
     local filePath = "/ZKMod/world.csv"
-    local dataFile = getFileWriter(filePath, true, false)
+    local dataFile = ZKGetFileWriterSafe(filePath, true, false)
 
-    dataFile:write(strHeader)
-    dataFile:write(strData)
-    dataFile:close()
+    if dataFile then
+        dataFile:write(strHeader)
+        dataFile:write(strData)
+        dataFile:close()
 
-    ZKPrint("ZKSaveWorld: saved to " .. filePath)
+        ZKPrint("ZKSaveWorld: saved to " .. filePath)
+    end
 end
 
 local ZKSaveOnlinePlayers = function()    
     local playerData = ZKGetOnlinePlayers()
 
-    filePath = "/ZKMod/players_online.csv"
+    local filePath = "/ZKMod/players_online.csv"
 
-    local dataFile = getFileWriter(filePath, true, false)
-    dataFile:write(playerData)
-    dataFile:close()
-    ZKPrint("ZKSaveOnlinePlayers: saved to " .. filePath)
+    local dataFile = ZKGetFileWriterSafe(filePath, true, false)
+    if dataFile then
+        dataFile:write(playerData)
+        dataFile:close()
+        ZKPrint("ZKSaveOnlinePlayers: saved to " .. filePath)
+    end
 end
 
 -- get game world related data
@@ -241,9 +264,11 @@ local function ZKWriteEvent(username, message)
     local strData = ZKGetCSVLine(data)
     local filePath = "/ZKMod/events.csv"
 
-    local dataFile = getFileWriter(filePath, true, true)
-    dataFile:write(strData)
-    dataFile:close()
+    local dataFile = ZKGetFileWriterSafe(filePath, true, true)
+    if dataFile then
+        dataFile:write(strData)
+        dataFile:close()
+    end
 end
 
 -- https://pzwiki.net/wiki/Modding:Lua_Events
@@ -327,11 +352,12 @@ local ZKSaveSafehouses = function()
     
     -- https://zomboid-javadoc.com/41.65/zombie/iso/areas/SafeHouse.html
     local safehouses = SafeHouse:getSafehouseList() 
-        
     local strHeader = ""
     local strData = ""
+    local safehouseCount = 0
 
     if safehouses then
+        safehouseCount = safehouses:size()
         for i = 0, safehouses:size() - 1 do
             
             local data = {}
@@ -339,8 +365,8 @@ local ZKSaveSafehouses = function()
             local safehouse = safehouses:get(i)
 
             -- data.id = safehouse:getId() -- "10744,9536 at 1644311215375"
-            data.title = safehouse:getTitle()
-            data.owner = safehouse:getOwner()
+            data.title = safehouse:getTitle() or ""
+            data.owner = safehouse:getOwner() or ""
             data.x = safehouse:getX()
             data.x2 = safehouse:getX2()
             data.y = safehouse:getY()
@@ -349,7 +375,7 @@ local ZKSaveSafehouses = function()
             data.h = safehouse:getH()
             data.lastVisited = safehouse:getLastVisited()
             
-            local players = "Players(" .. safehouse:getOwner()
+            local players = "Players(" .. data.owner
             local playersList = safehouse:getPlayers()
 
             -- ZKPrint("ZKSaveSafehouses: playersList:size()=" .. playersList:size())
@@ -373,14 +399,15 @@ local ZKSaveSafehouses = function()
         end
     end
 
-    filePath = "/ZKMod/safehouses.csv"
+    local filePath = "/ZKMod/safehouses.csv"
     
-    local dataFile = getFileWriter(filePath, true, false)
-    dataFile:write(strHeader)
-    dataFile:write(strData)
-    dataFile:close()
-
-    ZKPrint("ZKSaveSafehouses: " .. safehouses:size() .. " safehouse(s) saved to " .. filePath)
+    local dataFile = ZKGetFileWriterSafe(filePath, true, false)
+    if dataFile then
+        dataFile:write(strHeader)
+        dataFile:write(strData)
+        dataFile:close()
+        ZKPrint("ZKSaveSafehouses: " .. safehouseCount .. " safehouse(s) saved to " .. filePath)
+    end
 end
 
 local ZKSaveFactions = function()    
@@ -390,15 +417,17 @@ local ZKSaveFactions = function()
 
     local strHeader = ""
     local strData = ""
+    local factionCount = 0
     
     if factions then
+        factionCount = factions:size()
         local data = {}
         for i = 0, factions:size() - 1 do
             local faction = factions:get(i)
 
-            data.name = faction:getName()
+            data.name = faction:getName() or ""
 
-            data.owner = faction:getOwner()
+            data.owner = faction:getOwner() or ""
             data.tagName = ""
             if faction:getTag() then
                 data.tagName = faction:getTag()
@@ -414,7 +443,7 @@ local ZKSaveFactions = function()
                 data.tagColorB = color:getBlue()
             end
 
-            local players = "Players(" .. faction:getOwner()            
+            local players = "Players(" .. data.owner            
             local playersList = faction:getPlayers()
 
             -- ZKPrint("ZKSaveFactions: playersList:size()=" .. playersList:size())
@@ -438,83 +467,101 @@ local ZKSaveFactions = function()
         end
     end
 
-    filePath = "/ZKMod/factions.csv"
+    local filePath = "/ZKMod/factions.csv"
     
-    local dataFile = getFileWriter(filePath, true, false)
-    dataFile:write(strHeader)
-    dataFile:write(strData)
-    dataFile:close()
+    local dataFile = ZKGetFileWriterSafe(filePath, true, false)
+    if dataFile then
+        dataFile:write(strHeader)
+        dataFile:write(strData)
+        dataFile:close()
 
-    ZKPrint("ZKSaveFactions: " .. factions:size() .. " faction(s) saved to " .. filePath)
+        ZKPrint("ZKSaveFactions: " .. factionCount .. " faction(s) saved to " .. filePath)
+    end
 end
 
-function ZKOnInitWorld()
-    ZKPrint("OnInitWorld: SandboxVars.ZKMod.ServerSaveWorldEvery=" .. SandboxVars.ZKMod.ServerSaveWorldEvery)
+local serverTimersRegistered = false
+
+local function ZKInitServerTimers()
+    if serverTimersRegistered then
+        return
+    end
+
+    if not SandboxVars or not SandboxVars.ZKMod then
+        ZKPrint("ZKInitServerTimers: SandboxVars.ZKMod not ready, waiting for next event tick")
+        return
+    end
+
+    serverTimersRegistered = true
+    local serverSandbox = SandboxVars.ZKMod
+
+    ZKPrint("ZKInitServerTimers: SandboxVars.ZKMod.ServerSaveWorldEvery=" .. tostring(serverSandbox.ServerSaveWorldEvery))
     -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
     -- Default: 1
 
-    if SandboxVars.ZKMod.ServerSaveWorldEvery == 1 then
+    if serverSandbox.ServerSaveWorldEvery == 1 then
         Events.EveryTenMinutes.Add(ZKSaveWorld)    
-    elseif SandboxVars.ZKMod.ServerSaveWorldEvery == 2 then
+    elseif serverSandbox.ServerSaveWorldEvery == 2 then
         Events.EveryHours.Add(ZKSaveWorld)
-    elseif SandboxVars.ZKMod.ServerSaveWorldEvery == 3 then
+    elseif serverSandbox.ServerSaveWorldEvery == 3 then
         Events.EveryDays.Add(ZKSaveWorld)
     end
 
-    ZKPrint("OnInitWorld: SandboxVars.ZKMod.ServerSaveWorldHistoryEvery=" .. SandboxVars.ZKMod.ServerSaveWorldHistoryEvery)
+    ZKPrint("ZKInitServerTimers: SandboxVars.ZKMod.ServerSaveWorldHistoryEvery=" .. tostring(serverSandbox.ServerSaveWorldHistoryEvery))
     -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
     -- Default: 2
 
-    if SandboxVars.ZKMod.ServerSaveWorldHistoryEvery == 1 then
+    if serverSandbox.ServerSaveWorldHistoryEvery == 1 then
         Events.EveryTenMinutes.Add(ZKSaveWorldHistory)    
-    elseif SandboxVars.ZKMod.ServerSaveWorldHistoryEvery == 2 then
+    elseif serverSandbox.ServerSaveWorldHistoryEvery == 2 then
         Events.EveryHours.Add(ZKSaveWorldHistory)
-    elseif SandboxVars.ZKMod.ServerSaveWorldHistoryEvery == 3 then
+    elseif serverSandbox.ServerSaveWorldHistoryEvery == 3 then
         Events.EveryDays.Add(ZKSaveWorldHistory)
     end
 
-    ZKPrint("OnInitWorld: SandboxVars.ZKMod.ServerSaveOnlinePlayersEvery=" .. SandboxVars.ZKMod.ServerSaveOnlinePlayersEvery)
+    ZKPrint("ZKInitServerTimers: SandboxVars.ZKMod.ServerSaveOnlinePlayersEvery=" .. tostring(serverSandbox.ServerSaveOnlinePlayersEvery))
     -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
     -- Default: 1
 
-    if SandboxVars.ZKMod.ServerSaveOnlinePlayersEvery == 1 then
+    if serverSandbox.ServerSaveOnlinePlayersEvery == 1 then
         Events.EveryTenMinutes.Add(ZKSaveOnlinePlayers)    
-    elseif SandboxVars.ZKMod.ServerSaveOnlinePlayersEvery == 2 then
+    elseif serverSandbox.ServerSaveOnlinePlayersEvery == 2 then
         Events.EveryHours.Add(ZKSaveOnlinePlayers)
-    elseif SandboxVars.ZKMod.ServerSaveOnlinePlayersEvery == 3 then
+    elseif serverSandbox.ServerSaveOnlinePlayersEvery == 3 then
         Events.EveryDays.Add(ZKSaveOnlinePlayers)
     end
-    if SandboxVars.ZKMod.ServerSaveOnlinePlayersEvery > 0 then
+    if (serverSandbox.ServerSaveOnlinePlayersEvery or 0) > 0 then
         Events.OnSave.Add(ZKSaveOnlinePlayers)
     end
 
-    ZKPrint("OnInitWorld: SandboxVars.ZKMod.ServerSaveSafehousesEvery=" .. SandboxVars.ZKMod.ServerSaveSafehousesEvery)
+    ZKPrint("ZKInitServerTimers: SandboxVars.ZKMod.ServerSaveSafehousesEvery=" .. tostring(serverSandbox.ServerSaveSafehousesEvery))
     -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
     -- Default: 2
 
-    if SandboxVars.ZKMod.ServerSaveSafehousesEvery == 1 then
+    if serverSandbox.ServerSaveSafehousesEvery == 1 then
         Events.EveryTenMinutes.Add(ZKSaveSafehouses)    
-    elseif SandboxVars.ZKMod.ServerSaveSafehousesEvery == 2 then
+    elseif serverSandbox.ServerSaveSafehousesEvery == 2 then
         Events.EveryHours.Add(ZKSaveSafehouses)
-    elseif SandboxVars.ZKMod.ServerSaveSafehousesEvery == 3 then
+    elseif serverSandbox.ServerSaveSafehousesEvery == 3 then
         Events.EveryDays.Add(ZKSaveSafehouses)
     end
 
-    ZKPrint("OnInitWorld: SandboxVars.ZKMod.ServerSaveFactionsEvery=" .. SandboxVars.ZKMod.ServerSaveFactionsEvery)
+    ZKPrint("ZKInitServerTimers: SandboxVars.ZKMod.ServerSaveFactionsEvery=" .. tostring(serverSandbox.ServerSaveFactionsEvery))
     -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
     -- Default: 2
 
-    if SandboxVars.ZKMod.ServerSaveFactionsEvery == 1 then
+    if serverSandbox.ServerSaveFactionsEvery == 1 then
         Events.EveryTenMinutes.Add(ZKSaveFactions)    
-    elseif SandboxVars.ZKMod.ServerSaveFactionsEvery == 2 then
+    elseif serverSandbox.ServerSaveFactionsEvery == 2 then
         Events.EveryHours.Add(ZKSaveFactions)
-    elseif SandboxVars.ZKMod.ServerSaveFactionsEvery == 3 then
+    elseif serverSandbox.ServerSaveFactionsEvery == 3 then
         Events.EveryDays.Add(ZKSaveFactions)
     end
-
 end
 
-Events.OnInitWorld.Add(ZKOnInitWorld)
+Events.OnInitWorld.Add(ZKInitServerTimers)
+if Events.OnServerStarted then
+    Events.OnServerStarted.Add(ZKInitServerTimers)
+end
 
 -- https://pzwiki.net/wiki/Modding:Lua_Events/OnRainStart
 -- function ZKOnRainStart()

@@ -6,7 +6,46 @@ if isServer() then
     return
 end
 
-ZKPrint("Mod version: v1.4.1")
+ZKPrint("Mod version: v1.5.0 (Build 42.13)")
+
+local clientEventsRegistered = false
+
+local trackedPerks = {
+    "Agility",
+    "Aiming",
+    "Axe",
+    "Blacksmith",
+    "Blunt",
+    "Combat",
+    "Cooking",
+    "Crafting",
+    "Doctor",
+    "Electricity",
+    "Farming",
+    "Firearm",
+    "Fishing",
+    "Fitness",
+    "Lightfoot",
+    "LongBlade",
+    "Maintenance",
+    "Mechanics",
+    "Melee",
+    "Melting",
+    "MetalWelding",
+    "Nimble",
+    "PlantScavenging",
+    "Reloading",
+    "SmallBlade",
+    "SmallBlunt",
+    "Sneak",
+    "Spear",
+    "Sprinting",
+    "Strength",
+    "Survivalist",
+    "Tailoring",
+    "Trapping",
+    "Woodwork"
+}
 
 local function ZKGetCommonPlayerData()
 
@@ -22,18 +61,38 @@ local function ZKGetCommonPlayerData()
     local gametime = getGameTime()
 
     local username = player:getUsername()
-    local forname = player:getDescriptor():getForename()
-    local surname = player:getDescriptor():getSurname()
+    local descriptor = player:getDescriptor()
+    local forname = ""
+    local surname = ""
+    if descriptor then
+        forname = descriptor:getForename() or ""
+        surname = descriptor:getSurname() or ""
+    end
 
     local playerData = {}
 
     playerData.systemDate = ZKGetSystemDate()
     playerData.systemTime = ZKGetSystemTime()
     playerData.gametime = ZKGetGameTimeString(gametime)
-    playerData.steamID = getSteamIDFromUsername(username)
+    local steamID = ""
+    if player.getSteamID then
+        steamID = player:getSteamID() or ""
+    end
+    if steamID == "" and username then
+        local resolved = getSteamIDFromUsername(username)
+        if resolved then
+            steamID = resolved
+        end
+    end
+    playerData.steamID = steamID
 
     playerData.username = username
-    playerData.charName = forname .. " " .. surname
+    local charName = (forname .. " " .. surname):gsub("^%s+", "")
+    charName = charName:gsub("%s+$", "")
+    if charName == "" then
+        charName = username or ""
+    end
+    playerData.charName = charName
 
     return playerData
 end
@@ -63,16 +122,29 @@ local function SendPlayerData(isdead)
 
         -- https://zomboid-javadoc.com/41.65/zombie/characters/BodyDamage/Nutrition.html
         local nutrition = player:getNutrition()
-        playerData.weight = string.format("%.1f", nutrition:getWeight())
-        playerData.characterHaveWeightTrouble = nutrition:characterHaveWeightTrouble()
+        if nutrition then
+            playerData.weight = string.format("%.1f", nutrition:getWeight())
+            playerData.characterHaveWeightTrouble = nutrition:characterHaveWeightTrouble()
+        else
+            playerData.weight = "0.0"
+            playerData.characterHaveWeightTrouble = false
+        end
 
         -- https://zomboid-javadoc.com/41.65/zombie/characters/SurvivorDesc.html
         local descriptor = player:getDescriptor()
-        playerData.profession = descriptor:getProfession()
+        if descriptor and descriptor.getProfession then
+            playerData.profession = descriptor:getProfession() or ""
+        else
+            playerData.profession = ""
+        end
 
         -- https://zomboid-javadoc.com/41.65/zombie/characters/traits/TraitCollection.html
         local traits = player:getTraits()
-        playerData.traits = traits:toString()
+        if traits and traits.toString then
+            playerData.traits = traits:toString()
+        else
+            playerData.traits = ""
+        end
 
         playerData.isFemale = player:isFemale()
 
@@ -227,43 +299,12 @@ local function ZKSendPlayerPerksData()
 
     if playerData then
 
-        playerData.Agility = player:getPerkLevel(Perks.Agility)
-        playerData.Aiming = player:getPerkLevel(Perks.Aiming)
-        playerData.Axe = player:getPerkLevel(Perks.Axe)
-        playerData.Blacksmith = player:getPerkLevel(Perks.Blacksmith)
-        playerData.Blunt = player:getPerkLevel(Perks.Blunt)
-        playerData.Combat = player:getPerkLevel(Perks.Combat)
-        playerData.Cooking = player:getPerkLevel(Perks.Cooking)
-        playerData.Crafting = player:getPerkLevel(Perks.Crafting)
-        playerData.Doctor = player:getPerkLevel(Perks.Doctor)
-        playerData.Electricity = player:getPerkLevel(Perks.Electricity)
-        playerData.Farming = player:getPerkLevel(Perks.Farming)
-        playerData.Firearm = player:getPerkLevel(Perks.Firearm)
-        playerData.Fishing = player:getPerkLevel(Perks.Fishing)
-        playerData.Fitness = player:getPerkLevel(Perks.Fitness)
-        playerData.Lightfoot = player:getPerkLevel(Perks.Lightfoot)
-        playerData.LongBlade = player:getPerkLevel(Perks.LongBlade)
-        playerData.Maintenance = player:getPerkLevel(Perks.Maintenance)
-        -- playerData.MAX = player:getPerkLevel(Perks.MAX)
-        playerData.Mechanics = player:getPerkLevel(Perks.Mechanics)
-        playerData.Melee = player:getPerkLevel(Perks.Melee)
-        playerData.Melting = player:getPerkLevel(Perks.Melting)
-        playerData.MetalWelding = player:getPerkLevel(Perks.MetalWelding)
-        playerData.Nimble = player:getPerkLevel(Perks.Nimble)
-        -- playerData.None = player:getPerkLevel(Perks.None)
-        -- playerData.Passiv = player:getPerkLevel(Perks.Passiv)
-        playerData.PlantScavenging = player:getPerkLevel(Perks.PlantScavenging)
-        playerData.Reloading = player:getPerkLevel(Perks.Reloading)
-        playerData.SmallBlade = player:getPerkLevel(Perks.SmallBlade)
-        playerData.SmallBlunt = player:getPerkLevel(Perks.SmallBlunt)
-        playerData.Sneak = player:getPerkLevel(Perks.Sneak)
-        playerData.Spear = player:getPerkLevel(Perks.Spear)
-        playerData.Sprinting = player:getPerkLevel(Perks.Sprinting)
-        playerData.Strength = player:getPerkLevel(Perks.Strength)
-        playerData.Survivalist = player:getPerkLevel(Perks.Survivalist)
-        playerData.Tailoring = player:getPerkLevel(Perks.Tailoring)
-        playerData.Trapping = player:getPerkLevel(Perks.Trapping)
-        playerData.Woodwork = player:getPerkLevel(Perks.Woodwork)
+        for _, perkName in ipairs(trackedPerks) do
+            local perk = Perks[perkName]
+            if perk then
+                playerData[perkName] = player:getPerkLevel(perk)
+            end
+        end
 
         local command = "SendPlayerPerksData"
         ZKPrint("SendPlayerPerksData: command=" .. command .. " username=" .. playerData.username)
@@ -290,7 +331,12 @@ local function ZKSendPlayerInventoryData()
     playerData.username = username
 
     local lines = {}
-    ZKSaveItemContainer(lines, playerData, "", player:getInventory())
+    local inventory = player:getInventory()
+    if not inventory then
+        ZKPrint("ZKSendPlayerInventoryData: inventory missing for " .. tostring(username))
+        return
+    end
+    ZKSaveItemContainer(lines, playerData, "", inventory)
 
     local command = "SendPlayerInventoryData"
     ZKPrint("SendPlayerInventoryData: command=" .. command .. " username=" .. username)
@@ -300,7 +346,13 @@ end
 -- SaveItem... functions kindly taken from "Character Save" Mod by Tchernobill 
 -- https://steamcommunity.com/sharedfiles/filedetails/?id=2673317083
 function ZKSaveItemContainer(lines, playerData, itemIndex, itemContainer)
+    if not itemContainer then
+        return
+    end
     local invInventory = itemContainer:getItems();
+    if not invInventory then
+        return
+    end
     local initialInvLastIt = invInventory:size() - 1;
     local countIndex = 1;
 
@@ -339,7 +391,13 @@ function ZKSaveItemContainer(lines, playerData, itemIndex, itemContainer)
 end
 
 function ZKSaveItemWeaponPart(lines, playerData, itemIndex, weaponItem)
+    if not weaponItem then
+        return
+    end
     local weaponParts = weaponItem:getAllWeaponParts();
+    if not weaponParts then
+        return
+    end
     for f = 0, weaponParts:size() - 1 do
         local item = weaponParts:get(f);
         if item then
@@ -347,7 +405,7 @@ function ZKSaveItemWeaponPart(lines, playerData, itemIndex, weaponItem)
 
             local line = ZKShallowCopy(playerData)
 
-            local currentItemIndex = ""..f+1
+            local currentItemIndex = tostring(f + 1)
             if itemIndex~="" then
                 currentItemIndex = itemIndex.."|"..currentItemIndex
             end
@@ -366,8 +424,11 @@ function ZKSaveItemWeaponPart(lines, playerData, itemIndex, weaponItem)
 end
 
 function ZKSaveItemWeaponMagazine(lines, playerData, itemIndex, weaponItem)
+    if not weaponItem then
+        return
+    end
     local magazineType = weaponItem:getMagazineType();
-    if weaponItem:isContainsClip() then
+    if weaponItem:isContainsClip() and magazineType then
         local nbAmmo = weaponItem:getCurrentAmmoCount()
         if weaponItem:isRoundChambered() then
             nbAmmo = nbAmmo + 1
@@ -400,12 +461,17 @@ end
 local function ZKLevelPerk(character, perk, level, levelUp)
     local eventData = ZKGetEventData("LevelPerk")
     if eventData then
-        eventData.eventData1 = perk:getName()
-        eventData.eventData2 = level
-        eventData.eventData3 = levelUp
-        local player = getPlayer()
-        local command = "SendEvent"
-        sendClientCommand(player, "ZKMod", command, eventData)
+        eventData.eventData1 = perk and perk:getName() or ""
+        eventData.eventData2 = level or 0
+        eventData.eventData3 = levelUp and true or false
+        local player = character
+        if not player or not player.getUsername then
+            player = getPlayer()
+        end
+        if player then
+            local command = "SendEvent"
+            sendClientCommand(player, "ZKMod", command, eventData)
+        end
     end
 
     ZKSendPlayerPerksData()
@@ -417,65 +483,89 @@ local function ZKSendPlayerInventoryDataStart()
     Events.EveryTenMinutes.Remove(ZKSendPlayerInventoryDataStart)
 end
 
-local function ZKOnGameStart()
-    ZKPrint("ZKOnGameStart: SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery=" ..
-                SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery)
+local function ZKRegisterClientEvents()
+    if clientEventsRegistered then
+        return
+    end
+
+    if not SandboxVars or not SandboxVars.ZKMod then
+        ZKPrint("ZKRegisterClientEvents: SandboxVars.ZKMod not ready, waiting for another lifecycle event")
+        return
+    end
+
+    clientEventsRegistered = true
+    local zkSandbox = SandboxVars.ZKMod
+
+    ZKPrint("ZKRegisterClientEvents: SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery=" ..
+                tostring(zkSandbox.ClientSendPlayerDataAliveEvery))
     -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
     -- Default: 2
 
-    if SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery == 1 then
+    if zkSandbox.ClientSendPlayerDataAliveEvery == 1 then
         Events.EveryTenMinutes.Add(ZKSendPlayerDataAlive)
-    elseif SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery == 2 then
+    elseif zkSandbox.ClientSendPlayerDataAliveEvery == 2 then
         Events.EveryHours.Add(ZKSendPlayerDataAlive)
-    elseif SandboxVars.ZKMod.ClientSendPlayerDataAliveEvery == 3 then
+    elseif zkSandbox.ClientSendPlayerDataAliveEvery == 3 then
         Events.EveryDays.Add(ZKSendPlayerDataAlive)
     end
 
-    ZKPrint("ZKOnGameStart: SandboxVars.ZKMod.ClientSendPlayerDataDeath=" .. SandboxVars.ZKMod.ClientSendPlayerDataDeath)
+    ZKPrint("ZKRegisterClientEvents: SandboxVars.ZKMod.ClientSendPlayerDataDeath=" .. tostring(zkSandbox.ClientSendPlayerDataDeath))
     -- 0: Off, 1: On
     -- Default: 1
-    if SandboxVars.ZKMod.ClientSendPlayerDataDeath == 1 then
+    if zkSandbox.ClientSendPlayerDataDeath == 1 then
         Events.OnPlayerDeath.Add(ZKSendPlayerDataDeath)
     end
 
-    ZKPrint("ZKOnGameStart: SandboxVars.ZKMod.ClientSendEventLevelPerk=" .. SandboxVars.ZKMod.ClientSendEventLevelPerk)
+    ZKPrint("ZKRegisterClientEvents: SandboxVars.ZKMod.ClientSendEventLevelPerk=" .. tostring(zkSandbox.ClientSendEventLevelPerk))
     -- 0: Off, 1: On
     -- Default: 1
-    if SandboxVars.ZKMod.ClientSendEventLevelPerk == 1 then
+    if zkSandbox.ClientSendEventLevelPerk == 1 then
         Events.LevelPerk.Add(ZKLevelPerk)
     end
 
-    ZKPrint("ZKOnGameStart: SandboxVars.ZKMod.ClientSendPlayerPerksDataEvery=" ..
-                SandboxVars.ZKMod.ClientSendPlayerPerksDataEvery)
+    ZKPrint("ZKRegisterClientEvents: SandboxVars.ZKMod.ClientSendPlayerPerksDataEvery=" ..
+                tostring(zkSandbox.ClientSendPlayerPerksDataEvery))
     -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
     -- Default: 3
-    if SandboxVars.ZKMod.ClientSendPlayerPerksDataEvery == 1 then
+    if zkSandbox.ClientSendPlayerPerksDataEvery == 1 then
         Events.EveryTenMinutes.Add(ZKSendPlayerPerksData)
-    elseif SandboxVars.ZKMod.ClientSendPlayerPerksDataEvery == 2 then
+    elseif zkSandbox.ClientSendPlayerPerksDataEvery == 2 then
         Events.EveryHours.Add(ZKSendPlayerPerksData)
-    elseif SandboxVars.ZKMod.ClientSendPlayerPerksDataEvery == 3 then
+    elseif zkSandbox.ClientSendPlayerPerksDataEvery == 3 then
         Events.EveryDays.Add(ZKSendPlayerPerksData)
     end
 
-    ZKPrint("ZKOnGameStart: SandboxVars.ZKMod.ClientSendPlayerInventoryDataEvery=" ..
-                SandboxVars.ZKMod.ClientSendPlayerInventoryDataEvery)
+    ZKPrint("ZKRegisterClientEvents: SandboxVars.ZKMod.ClientSendPlayerInventoryDataEvery=" ..
+                tostring(zkSandbox.ClientSendPlayerInventoryDataEvery))
     -- 0: Off, 1: EveryTenMinutes, 2: EveryHours, 3: EveryDays
     -- Default: 3
-    if SandboxVars.ZKMod.ClientSendPlayerInventoryDataEvery == 1 then
+    if zkSandbox.ClientSendPlayerInventoryDataEvery == 1 then
         Events.EveryTenMinutes.Add(ZKSendPlayerInventoryData)
-    elseif SandboxVars.ZKMod.ClientSendPlayerInventoryDataEvery == 2 then
+    elseif zkSandbox.ClientSendPlayerInventoryDataEvery == 2 then
         Events.EveryHours.Add(ZKSendPlayerInventoryData)
-    elseif SandboxVars.ZKMod.ClientSendPlayerInventoryDataEvery == 3 then
+    elseif zkSandbox.ClientSendPlayerInventoryDataEvery == 3 then
         Events.EveryDays.Add(ZKSendPlayerInventoryData)
     end
 
     -- also do once on join
-    if SandboxVars.ZKMod.ClientSendPlayerInventoryDataEvery > 1 then
-        ZKPrint("ZKOnGameStart: adding ZKSendPlayerInventoryDataStart")
+    if (zkSandbox.ClientSendPlayerInventoryDataEvery or 0) > 1 then
+        ZKPrint("ZKRegisterClientEvents: adding ZKSendPlayerInventoryDataStart")
         Events.EveryTenMinutes.Add(ZKSendPlayerInventoryDataStart)
     end
 end
+
+local function ZKOnGameStart()
+    ZKRegisterClientEvents()
+end
+
+local function ZKOnCreatePlayerEvent()
+    ZKRegisterClientEvents()
+end
+
 Events.OnGameStart.Add(ZKOnGameStart)
+Events.OnCreatePlayer.Add(function(playerIndex, player)
+    ZKOnCreatePlayerEvent()
+end)
 
 -- https://pzwiki.net/wiki/Modding:Lua_Events/OnNewFire
 -- https://pzwiki.net/wiki/Modding:Lua_Events/OnZombieDead

@@ -1,0 +1,13 @@
+name=ZKMod Data Collector
+id=ZKMod
+author=IkeC
+description=Collects and saves world and player data on your server in CSV files.
+description=
+description=Full documentation: https://github.com/IkeC/ZKModDataCollector/blob/main/README.md
+description=My Ko-fi: https://ko-fi.com/ikeserver
+description=
+description=Tested and working on 42.13 SP and MP. Please leave a thumbs up and/or support me on Ko-fi if useful.
+url=https://github.com/IkeC/ZKModDataCollector
+poster=poster.png
+icon=poster.png
+modversion=2.0.0

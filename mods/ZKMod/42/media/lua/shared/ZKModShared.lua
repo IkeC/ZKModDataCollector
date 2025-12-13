@@ -88,7 +88,23 @@ function ZKGetSystemTime()
 end
 
 function ZKPrint(msg)
-    print(ZKGetSystemDate() .. " " .. ZKGetSystemTime() .. " [ZKMod Data Collector] " .. msg)
+    if not SandboxVars or not SandboxVars.ZKMod then
+        print("[ZKMod Data Collector] " .. msg)
+    else
+        print(ZKGetSystemDate() .. " " .. ZKGetSystemTime() .. " [ZKMod Data Collector] " .. msg)
+    end
+end
+
+function ZKPrint(msg)
+    if not SandboxVars or not SandboxVars.ZKMod then
+        print("[ZKMod Data Collector] " .. msg)
+    else
+        print(ZKGetSystemDate() .. " " .. ZKGetSystemTime() .. " [ZKMod Data Collector] " .. msg)
+    end
+end
+
+function ZKPrintNoTime(msg)
+    print("[ZKMod Data Collector] " .. msg)
 end
 
 function ZKShallowCopy(original)

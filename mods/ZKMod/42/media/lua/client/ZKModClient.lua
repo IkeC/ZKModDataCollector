@@ -222,8 +222,8 @@ local function SendPlayerData(isdead)
             -- ZKPrint("safehouse empty")
         end
 
-        local favoriteWeaponHit = 0;
-        local favoriteWeapon = "";
+        local favoriteWeaponHit = 0
+        local favoriteWeapon = ""
 
         local modData = player:getModData()
         if modData then
@@ -241,18 +241,44 @@ local function SendPlayerData(isdead)
             end
         end
 
-        playerData.favoriteWeapon = favoriteWeapon;
-        playerData.favoriteWeaponHit = favoriteWeaponHit;
+        playerData.favoriteWeapon = favoriteWeapon
+        playerData.favoriteWeaponHit = favoriteWeaponHit
 
         local damage = player:getBodyDamage()
+        local stats = player.getStats and player:getStats() or nil
 
         if damage then
-            playerData.hasInjury = damage:HasInjury()
-            playerData.health = string.format("%.1f", damage:getHealth())
-            playerData.wetness = string.format("%.1f", damage:getWetness())
-            playerData.boredom = string.format("%.1f", damage:getBoredomLevel())
-            playerData.infectionLevel = string.format("%.1f", damage:getInfectionLevel())
-            playerData.fakeInfectionLevel = string.format("%.1f", damage:getFakeInfectionLevel())
+            if damage.HasInjury then
+                playerData.hasInjury = damage:HasInjury()
+            else
+                playerData.hasInjury = false
+            end
+
+            if damage.getHealth then
+                playerData.health = string.format("%.1f", damage:getHealth())
+            else
+                playerData.health = "0.0"
+            end
+
+            if damage.getWetness then
+                playerData.wetness = string.format("%.1f", damage:getWetness())
+            else
+                playerData.wetness = "0.0"
+            end
+
+            if stats and stats.getBoredom then
+                playerData.boredom = string.format("%.1f", stats:getBoredom())
+            elseif damage.getBoredomLevel then
+                playerData.boredom = string.format("%.1f", damage:getBoredomLevel())
+            else
+                playerData.boredom = "0.0"
+            end
+
+            local infection = damage.getInfectionLevel and damage:getInfectionLevel() or 0
+            playerData.infectionLevel = string.format("%.1f", infection)
+
+            local fakeInfection = damage.getFakeInfectionLevel and damage:getFakeInfectionLevel() or 0
+            playerData.fakeInfectionLevel = string.format("%.1f", fakeInfection)
         end
 
         local command = "SendPlayerDataAlive"

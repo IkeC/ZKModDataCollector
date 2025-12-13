@@ -7,7 +7,7 @@ if not isServer() then
     return
 end
 
-ZKPrint("Mod version: v2.0.0 (Build 41+42)")
+ZKPrintNoTime("Mod version: v2.0.0 (Build 41+42)")
 
 local function ZKGetFileWriterSafe(filePath, createDirs, append)
     local writer = getFileWriter(filePath, createDirs, append)

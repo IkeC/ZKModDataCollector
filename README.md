@@ -7,7 +7,7 @@ Workshop ID: 2733284288 / Mod ID: ZKMod
 
 # Configuration
 You may configure or turn features off in *\<servername\>_SandboxVars.lua*. If you don't configure anything default values are used.
-  
+
 Example configuration:
 ```
 SandboxVars = {
@@ -23,13 +23,19 @@ SandboxVars = {
         ClientSendEventLevelPerk = 1,
         ClientSendPlayerPerksDataEvery = 3,
         ClientSendPlayerInventoryDataEvery = 3,
+        ServerTimeOffsetMinutes = 60
     },
 }
 ```
-All options and possible values: https://github.com/IkeC/ZKModDataCollector/blob/main/media/sandbox-options.txt
 
+# Support
+Here's my Ko-fi: https://ko-fi.com/ikeserver
+Thanks in advance!
 
 # Changelog
+
+## ZKMod 2.0.0 (2025-12-13)
+* Build 42 Multiplayer support
 
 ## ZKMod 1.4.1 (2022-11-24)
 * Feature: player inventory saved once after connecting in addition to the periodic saving

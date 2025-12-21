@@ -6,7 +6,7 @@ if isServer() then
     return
 end
 
-ZKPrint("Mod version: v2.0.0 (Build 41+42)")
+ZKPrint("Mod version: v2.0.1 (Build 42)")
 
 local clientEventsRegistered = false
 

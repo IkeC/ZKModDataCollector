@@ -34,6 +34,9 @@ Thanks in advance!
 
 # Changelog
 
+## ZKMod 2.0.3 (2025-12-21)
+* Fixed structure for Build 41
+
 ## ZKMod 2.0.0 (2025-12-13)
 * Build 42 Multiplayer support
 

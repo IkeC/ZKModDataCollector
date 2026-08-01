@@ -7,15 +7,193 @@ if not isServer() then
     return
 end
 
-ZKPrintNoTime("Mod version: v2.0.3 (Build 42)")
+ZKPrintNoTime("Mod version: v2.1 (Build 42)")
 
-local function ZKGetFileWriterSafe(filePath, createDirs, append)
-    local writer = getFileWriter(filePath, createDirs, append)
-    if not writer then
-        ZKPrint("ZKGetFileWriterSafe: failed to open " .. filePath)
+local function ZKNormalizeFilePath(filePath)
+    if not filePath or filePath == "" then
         return nil
     end
-    return writer
+
+    local normalizedPath = tostring(filePath):gsub("\\", "/")
+    normalizedPath = normalizedPath:gsub("^/+", "")
+
+    if normalizedPath:sub(1, 6) ~= "ZKMod/" then
+        normalizedPath = "ZKMod/" .. normalizedPath
+    end
+
+    return normalizedPath
+end
+
+local function ZKGetCSVOutputPath(filePath)
+    return ZKNormalizeFilePath(filePath)
+end
+
+local function ZKGetCSVFallbackPath(filePath)
+    local normalizedPath = ZKNormalizeFilePath(filePath)
+    if normalizedPath and normalizedPath:lower():sub(-4) == ".csv" then
+        return normalizedPath .. ".txt"
+    end
+    return normalizedPath
+end
+
+local function ZKWriteOutputBytes(output, content)
+    local text = tostring(content)
+    local index = 1
+    while index <= #text do
+        local codePoint = string.byte(text, index)
+        if codePoint >= 55296 and codePoint <= 56319 and index < #text then
+            local lowSurrogate = string.byte(text, index + 1)
+            if lowSurrogate >= 56320 and lowSurrogate <= 57343 then
+                codePoint = 65536 + (codePoint - 55296) * 1024 + lowSurrogate - 56320
+                index = index + 1
+            end
+        end
+
+        if codePoint < 128 then
+            output:writeByte(codePoint)
+        elseif codePoint < 2048 then
+            output:writeByte(192 + math.floor(codePoint / 64))
+            output:writeByte(128 + codePoint % 64)
+        elseif codePoint < 65536 then
+            output:writeByte(224 + math.floor(codePoint / 4096))
+            output:writeByte(128 + math.floor(codePoint / 64) % 64)
+            output:writeByte(128 + codePoint % 64)
+        else
+            output:writeByte(240 + math.floor(codePoint / 262144))
+            output:writeByte(128 + math.floor(codePoint / 4096) % 64)
+            output:writeByte(128 + math.floor(codePoint / 64) % 64)
+            output:writeByte(128 + codePoint % 64)
+        end
+
+        index = index + 1
+    end
+end
+
+local function ZKReadOutputBytes(filePath)
+    if type(getFileInput) ~= "function" then
+        return {}, nil
+    end
+
+    local openOk, input = pcall(getFileInput, filePath)
+    if not openOk then
+        return nil, input
+    end
+    if not input then
+        return {}, nil
+    end
+
+    local availableOk, available = pcall(function()
+        return input:available()
+    end)
+    if not availableOk then
+        pcall(function()
+            input:close()
+        end)
+        return nil, available
+    end
+
+    local contents = {}
+    for index = 1, available do
+        local readOk, byteValue = pcall(function()
+            return input:readUnsignedByte()
+        end)
+        if not readOk then
+            pcall(function()
+                input:close()
+            end)
+            return nil, byteValue
+        end
+        contents[index] = byteValue
+    end
+
+    local closeOk, closeError = pcall(function()
+        input:close()
+    end)
+    if not closeOk then
+        return nil, closeError
+    end
+
+    return contents, nil
+end
+
+local function ZKGetFileOutputSafe(filePath, append)
+    local outputPaths = {ZKGetCSVOutputPath(filePath), ZKGetCSVFallbackPath(filePath)}
+    for _, outputPath in ipairs(outputPaths) do
+        if outputPath then
+            local outputOk, output = pcall(getFileOutput, outputPath)
+            if outputOk and output then
+                local existingContents = {}
+                if append then
+                    local readError
+                    existingContents, readError = ZKReadOutputBytes(outputPath)
+                    if readError then
+                        pcall(function()
+                            output:close()
+                        end)
+                        output = nil
+                    end
+                end
+
+                if output then
+                    return {
+                        handle = output,
+                        existingContents = existingContents,
+                        path = outputPath
+                    }
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function ZKWriteAndCloseFileSafe(filePath, _, append, ...)
+    local dataFile = ZKGetFileOutputSafe(filePath, append)
+    if not dataFile then
+        return false
+    end
+
+    local contents = {...}
+    local writeOk, writeError = pcall(function()
+        for index = 1, #dataFile.existingContents do
+            dataFile.handle:writeByte(dataFile.existingContents[index])
+        end
+        for index = 1, #contents do
+            ZKWriteOutputBytes(dataFile.handle, contents[index])
+        end
+    end)
+    if not writeOk then
+        ZKPrint("ZKWriteAndCloseFileSafe: write failed for normalized='" .. tostring(ZKNormalizeFilePath(filePath)) .. "' error=" .. tostring(writeError))
+    end
+
+    local closeOk, closeError = pcall(function()
+        dataFile.handle:close()
+    end)
+    if not closeOk then
+        ZKPrint("ZKWriteAndCloseFileSafe: close failed for normalized='" .. tostring(ZKNormalizeFilePath(filePath)) .. "' error=" .. tostring(closeError))
+    end
+
+    return writeOk and closeOk, dataFile.path
+end
+
+local function ZKWriteOpenFileSafe(dataFile, filePath, content)
+    local ok, errorMessage = pcall(function()
+        ZKWriteOutputBytes(dataFile.handle, content)
+    end)
+    if not ok then
+        ZKPrint("ZKWriteOpenFileSafe: write failed for normalized='" .. tostring(ZKNormalizeFilePath(filePath)) .. "' error=" .. tostring(errorMessage))
+    end
+    return ok
+end
+
+local function ZKCloseFileSafe(dataFile, filePath)
+    local ok, errorMessage = pcall(function()
+        dataFile.handle:close()
+    end)
+    if not ok then
+        ZKPrint("ZKCloseFileSafe: close failed for normalized='" .. tostring(ZKNormalizeFilePath(filePath)) .. "' error=" .. tostring(errorMessage))
+    end
+    return ok
 end
 
 -- Parse player data and save it to a .csv file inside Lua/ZKMod/ folder
@@ -32,22 +210,15 @@ local function SavePlayerData(data, savedead)
         local strData = ZKGetCSVLine(data)
 
         local filePath = "/ZKMod/player_" .. data.username .. ".csv"
-        local dataFile = ZKGetFileWriterSafe(filePath, true, false)
-        if dataFile then
-            dataFile:write(strHeader)
-            dataFile:write(strData)
-            dataFile:close()
-            ZKPrint("SavePlayerData: saved to " .. filePath)
+        local saved, outputPath = ZKWriteAndCloseFileSafe(filePath, true, false, strHeader, strData)
+        if saved then
+            ZKPrint("SavePlayerData: saved to " .. outputPath)
         end
 
         if savedead and (not data.isAlive) then
             filePath = "/ZKMod/deaths.csv"
-            ZKPrint("SavePlayerData: " .. data.username .. " dead, saving to " .. filePath)
-            dataFile = ZKGetFileWriterSafe(filePath, true, true)
-            if dataFile then
-                dataFile:write(strData)
-                dataFile:close()
-            end
+            local _, outputPath = ZKWriteAndCloseFileSafe(filePath, true, true, strData)
+            ZKPrint("SavePlayerData: " .. data.username .. " dead, saving to " .. tostring(outputPath))
         end
     end
 end
@@ -65,12 +236,9 @@ local function SavePlayerPerksData(data)
         local strData = ZKGetCSVLine(data)
 
         local filePath = "/ZKMod/playerperks_" .. data.username .. ".csv"
-        local dataFile = ZKGetFileWriterSafe(filePath, true, false)
-        if dataFile then
-            dataFile:write(strHeader)
-            dataFile:write(strData)
-            dataFile:close()
-            ZKPrint("SavePlayerPerksData: saved to " .. filePath)
+        local saved, outputPath = ZKWriteAndCloseFileSafe(filePath, true, false, strHeader, strData)
+        if saved then
+            ZKPrint("SavePlayerPerksData: saved to " .. outputPath)
         end
     end
 end
@@ -95,7 +263,7 @@ local function SavePlayerInventoryData(lines)
 
             if filePath == "" then
                 filePath = "/ZKMod/playerinventory_" .. line.username .. ".csv"
-                dataFile = ZKGetFileWriterSafe(filePath, true, true)
+                dataFile = ZKGetFileOutputSafe(filePath, true)
                 if not dataFile then
                     return
                 end
@@ -104,13 +272,15 @@ local function SavePlayerInventoryData(lines)
             line.systemDate = localDate
             line.systemTime = localTime
             local strData = ZKGetCSVLine(line)
-            dataFile:write(strData)
+            if not ZKWriteOpenFileSafe(dataFile, filePath, strData) then
+                ZKCloseFileSafe(dataFile, filePath)
+                return
+            end
 
             lineCount = lineCount + 1
         end
-        if dataFile then
-            dataFile:close()
-            ZKPrint("SavePlayerInventoryData: saved " .. lineCount .. " line(s) to " .. filePath)
+        if dataFile and ZKCloseFileSafe(dataFile, filePath) then
+            ZKPrint("SavePlayerInventoryData: saved " .. lineCount .. " line(s) to " .. dataFile.path)
         end
     end
 end
@@ -126,11 +296,7 @@ local function SaveEventData(data)
         local strData = ZKGetCSVLine(data)
 
         local filePath = "/ZKMod/event_history.csv"
-        local dataFile = ZKGetFileWriterSafe(filePath, true, true)
-        if dataFile then
-            dataFile:write(strData)
-            dataFile:close()
-        end
+        ZKWriteAndCloseFileSafe(filePath, true, true, strData)
     end
 end
 
@@ -165,11 +331,9 @@ local ZKSaveWorldHistory = function()
     local strData = ZKGetCSVLine(worldData)
     local filePath = "/ZKMod/world_history.csv"
 
-    local dataFile = ZKGetFileWriterSafe(filePath, true, true)
-    if dataFile then
-        dataFile:write(strData)
-        dataFile:close()
-        ZKPrint("ZKSaveWorldHistory: saved to " .. filePath)
+    local saved, outputPath = ZKWriteAndCloseFileSafe(filePath, true, true, strData)
+    if saved then
+        ZKPrint("ZKSaveWorldHistory: saved to " .. outputPath)
     end
 end
 
@@ -180,14 +344,9 @@ local ZKSaveWorld = function()
     local strData = ZKGetCSVLine(worldData)
 
     local filePath = "/ZKMod/world.csv"
-    local dataFile = ZKGetFileWriterSafe(filePath, true, false)
-
-    if dataFile then
-        dataFile:write(strHeader)
-        dataFile:write(strData)
-        dataFile:close()
-
-        ZKPrint("ZKSaveWorld: saved to " .. filePath)
+    local saved, outputPath = ZKWriteAndCloseFileSafe(filePath, true, false, strHeader, strData)
+    if saved then
+        ZKPrint("ZKSaveWorld: saved to " .. outputPath)
     end
 end
 
@@ -196,11 +355,9 @@ local ZKSaveOnlinePlayers = function()
 
     local filePath = "/ZKMod/players_online.csv"
 
-    local dataFile = ZKGetFileWriterSafe(filePath, true, false)
-    if dataFile then
-        dataFile:write(playerData)
-        dataFile:close()
-        ZKPrint("ZKSaveOnlinePlayers: saved to " .. filePath)
+    local saved, outputPath = ZKWriteAndCloseFileSafe(filePath, true, false, playerData)
+    if saved then
+        ZKPrint("ZKSaveOnlinePlayers: saved to " .. outputPath)
     end
 end
 
@@ -264,11 +421,7 @@ local function ZKWriteEvent(username, message)
     local strData = ZKGetCSVLine(data)
     local filePath = "/ZKMod/events.csv"
 
-    local dataFile = ZKGetFileWriterSafe(filePath, true, true)
-    if dataFile then
-        dataFile:write(strData)
-        dataFile:close()
-    end
+    ZKWriteAndCloseFileSafe(filePath, true, true, strData)
 end
 
 -- https://pzwiki.net/wiki/Modding:Lua_Events
@@ -401,12 +554,9 @@ local ZKSaveSafehouses = function()
 
     local filePath = "/ZKMod/safehouses.csv"
     
-    local dataFile = ZKGetFileWriterSafe(filePath, true, false)
-    if dataFile then
-        dataFile:write(strHeader)
-        dataFile:write(strData)
-        dataFile:close()
-        ZKPrint("ZKSaveSafehouses: " .. safehouseCount .. " safehouse(s) saved to " .. filePath)
+    local saved, outputPath = ZKWriteAndCloseFileSafe(filePath, true, false, strHeader, strData)
+    if saved then
+        ZKPrint("ZKSaveSafehouses: " .. safehouseCount .. " safehouse(s) saved to " .. outputPath)
     end
 end
 
@@ -469,13 +619,9 @@ local ZKSaveFactions = function()
 
     local filePath = "/ZKMod/factions.csv"
     
-    local dataFile = ZKGetFileWriterSafe(filePath, true, false)
-    if dataFile then
-        dataFile:write(strHeader)
-        dataFile:write(strData)
-        dataFile:close()
-
-        ZKPrint("ZKSaveFactions: " .. factionCount .. " faction(s) saved to " .. filePath)
+    local saved, outputPath = ZKWriteAndCloseFileSafe(filePath, true, false, strHeader, strData)
+    if saved then
+        ZKPrint("ZKSaveFactions: " .. factionCount .. " faction(s) saved to " .. outputPath)
     end
 end
 

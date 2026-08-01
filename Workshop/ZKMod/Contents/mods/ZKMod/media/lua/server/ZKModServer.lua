@@ -7,7 +7,32 @@ if not isServer() then
     return
 end
 
-ZKPrint("Mod version: v2.0.3 (Build 41)")
+ZKPrint("Mod version: v2.1 (Build 41)")
+
+local function ZKNormalizeFilePath(filePath)
+    if not filePath or filePath == "" then
+        return nil
+    end
+
+    local normalizedPath = tostring(filePath):gsub("\\", "/")
+    normalizedPath = normalizedPath:gsub("^/+", "")
+
+    if normalizedPath:sub(1, 6) ~= "ZKMod/" then
+        normalizedPath = "ZKMod/" .. normalizedPath
+    end
+
+    return normalizedPath
+end
+
+local function ZKGetFileWriterSafe(filePath, createDirs, append)
+    local normalizedPath = ZKNormalizeFilePath(filePath)
+    local writer = getFileWriter(normalizedPath, createDirs, append)
+    if not writer then
+        ZKPrint("ZKGetFileWriterSafe: failed to open " .. tostring(normalizedPath))
+        return nil
+    end
+    return writer
+end
 
 -- Parse player data and save it to a .csv file inside Lua/ZKMod/ folder
 local function SavePlayerData(data, savedead)

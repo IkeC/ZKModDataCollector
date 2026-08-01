@@ -34,6 +34,9 @@ Thanks in advance!
 
 # Changelog
 
+## ZKMod 2.1 (2026-08-01)
+* Build 42 CSV output now tries the normal `.csv` path first and falls back to an additional `.txt` extension, such as `world.csv.txt`, when needed
+
 ## ZKMod 2.0.3 (2025-12-21)
 * Fixed structure for Build 41
 

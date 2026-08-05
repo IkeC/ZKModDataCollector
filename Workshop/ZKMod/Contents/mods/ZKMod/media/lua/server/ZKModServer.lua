@@ -7,7 +7,7 @@ if not isServer() then
     return
 end
 
-ZKPrint("Mod version: v2.1 (Build 41)")
+ZKPrint("Mod version: v2.2 (Build 41)")
 
 local function ZKNormalizeFilePath(filePath)
     if not filePath or filePath == "" then
@@ -147,6 +147,10 @@ local ZKOnClientCommand = function(module, command, player, args)
 
     if module ~= "ZKMod" then
         return;
+    end
+
+    if args and args.steamID then
+        args.steamID = tostring(args.steamID)
     end
 
     if command == "SendPlayerDataAlive" then

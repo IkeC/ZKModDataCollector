@@ -62,6 +62,6 @@ option ZKMod.ClientSendPlayerInventoryDataEvery
 
 option ZKMod.ServerTimeOffsetMinutes
 {
-	type = integer, min = -720, max = 720, default = 0,
-	description = "Shift server timestamps by +/- minutes (Build 42 servers default to UTC)"
+	type = integer, min = -720, max = 720, default = 120,
+	description = "Shift server timestamps by +/- minutes (Build 42 servers default to UTC+2)"
 }

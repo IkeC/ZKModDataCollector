@@ -23,7 +23,7 @@ SandboxVars = {
         ClientSendEventLevelPerk = 1,
         ClientSendPlayerPerksDataEvery = 3,
         ClientSendPlayerInventoryDataEvery = 3,
-        ServerTimeOffsetMinutes = 60
+        ServerTimeOffsetMinutes = 120
     },
 }
 ```
@@ -33,6 +33,9 @@ Here's my Ko-fi: https://ko-fi.com/ikeserver
 Thanks in advance!
 
 # Changelog
+
+## ZKMod 2.2 (2026-08-05)
+* Fixed Steam IDs being corrupted by reading the Java `long` value as a Lua number; the string-returning username lookup is now used
 
 ## ZKMod 2.1 (2026-08-01)
 * Build 42 CSV output now tries the normal `.csv` path first and falls back to an additional `.txt` extension, such as `world.csv.txt`, when needed

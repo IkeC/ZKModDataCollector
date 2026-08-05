@@ -6,7 +6,7 @@ if isServer() then
     return
 end
 
-ZKPrint("Mod version: v2.1 (Build 41)")
+ZKPrint("Mod version: v2.2 (Build 41)")
 
 local function ZKGetCommonPlayerData()
 
@@ -31,6 +31,9 @@ local function ZKGetCommonPlayerData()
     playerData.systemTime = ZKGetSystemTime()
     playerData.gametime = ZKGetGameTimeString(gametime)
     playerData.steamID = getSteamIDFromUsername(username)
+    if playerData.steamID then
+        playerData.steamID = tostring(playerData.steamID)
+    end
 
     playerData.username = username
     playerData.charName = forname .. " " .. surname

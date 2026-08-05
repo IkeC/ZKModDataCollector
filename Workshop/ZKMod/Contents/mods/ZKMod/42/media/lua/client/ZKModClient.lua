@@ -6,7 +6,7 @@ if isServer() then
     return
 end
 
-ZKPrint("Mod version: v2.1 (Build 42)")
+ZKPrint("Mod version: v2.2 (Build 42)")
 
 local clientEventsRegistered = false
 
@@ -75,16 +75,16 @@ local function ZKGetCommonPlayerData()
     playerData.systemTime = ZKGetSystemTime()
     playerData.gametime = ZKGetGameTimeString(gametime)
     local steamID = ""
-    if player.getSteamID then
-        steamID = player:getSteamID() or ""
-    end
-    if steamID == "" and username then
+    if username then
         local resolved = getSteamIDFromUsername(username)
         if resolved then
             steamID = resolved
         end
     end
     playerData.steamID = steamID
+    if playerData.steamID then
+        playerData.steamID = tostring(playerData.steamID)
+    end
 
     playerData.username = username
     local charName = (forname .. " " .. surname):gsub("^%s+", "")

@@ -34,6 +34,9 @@ Thanks in advance!
 
 # Changelog
 
+## ZKMod 2.3 (2026-09-12)
+* Build 42 character profession and trait collection now uses the current character API
+
 ## ZKMod 2.2 (2026-08-05)
 * Fixed Steam IDs being corrupted by reading the Java `long` value as a Lua number; the string-returning username lookup is now used
 

@@ -6,7 +6,7 @@ if isServer() then
     return
 end
 
-ZKPrint("Mod version: v2.2 (Build 42)")
+ZKPrint("Mod version: v2.3 (Build 42)")
 
 local clientEventsRegistered = false
 
@@ -46,6 +46,66 @@ local trackedPerks = {
     "Trapping",
     "Woodwork"
 }
+
+local function ZKCallMethod(label, object, methodName, ...)
+    if not object then
+        ZKPrint(label .. ": object is nil; cannot call " .. methodName)
+        return nil
+    end
+
+    local getMethodOk, method = pcall(function()
+        return object[methodName]
+    end)
+    if not getMethodOk then
+        ZKPrint(label .. ": failed to find " .. methodName .. ": " .. tostring(method))
+        return nil
+    end
+
+    if not method then
+        ZKPrint(label .. ": method unavailable: " .. methodName)
+        return nil
+    end
+
+    local callOk, result = pcall(method, object, ...)
+    if not callOk then
+        ZKPrint(label .. ": failed to call " .. methodName .. ": " .. tostring(result))
+        return nil
+    end
+
+    if result == nil then
+        ZKPrint(label .. ": " .. methodName .. " returned nil")
+    end
+
+    return result
+end
+
+local function ZKCallStaticMethod(label, classObject, methodName, ...)
+    if not classObject then
+        ZKPrint(label .. ": class is unavailable; cannot call " .. methodName)
+        return nil
+    end
+
+    local getMethodOk, method = pcall(function()
+        return classObject[methodName]
+    end)
+    if not getMethodOk then
+        ZKPrint(label .. ": failed to find " .. methodName .. ": " .. tostring(method))
+        return nil
+    end
+
+    if not method then
+        ZKPrint(label .. ": method unavailable: " .. methodName)
+        return nil
+    end
+
+    local callOk, result = pcall(method, ...)
+    if not callOk then
+        ZKPrint(label .. ": failed to call " .. methodName .. ": " .. tostring(result))
+        return nil
+    end
+
+    return result
+end
 
 local function ZKGetCommonPlayerData()
 
@@ -130,21 +190,49 @@ local function SendPlayerData(isdead)
             playerData.characterHaveWeightTrouble = false
         end
 
-        -- https://zomboid-javadoc.com/41.65/zombie/characters/SurvivorDesc.html
         local descriptor = player:getDescriptor()
-        if descriptor and descriptor.getProfession then
-            playerData.profession = descriptor:getProfession() or ""
-        else
-            playerData.profession = ""
+        local professionObject = ZKCallMethod("character profession", descriptor, "getCharacterProfession")
+        local profession = ZKCallMethod("profession name", professionObject, "getName")
+        local professionDefinition = ZKCallStaticMethod(
+            "profession definition",
+            CharacterProfessionDefinition,
+            "getCharacterProfessionDefinition",
+            professionObject
+        )
+        local professionLabel = ZKCallMethod("profession label", professionDefinition, "getLabel")
+        if professionLabel then
+            profession = professionLabel
         end
+        if profession == nil then
+            profession = ZKCallMethod("profession", descriptor, "getProfession")
+        end
+        playerData.profession = profession and tostring(profession) or ""
 
-        -- https://zomboid-javadoc.com/41.65/zombie/characters/traits/TraitCollection.html
-        local traitCollection = descriptor and descriptor.getTraits and descriptor:getTraits()
-        if traitCollection and traitCollection.toString then
-            playerData.traits = traitCollection:toString()
-        else
-            playerData.traits = ""
+        local traitCollection = ZKCallMethod("character traits", player, "getCharacterTraits")
+        local knownTraits = ZKCallMethod("known traits", traitCollection, "getKnownTraits")
+        local traitNames = {}
+        local traitCount = ZKCallMethod("trait count", knownTraits, "size") or 0
+        for traitIndex = 0, traitCount - 1 do
+            local traitObject = ZKCallMethod("known trait", knownTraits, "get", traitIndex)
+            local hasTrait = ZKCallMethod("trait enabled", traitCollection, "get", traitObject)
+            if hasTrait then
+                local traitName = ZKCallMethod("trait name", traitObject, "getName")
+                local traitDefinition = ZKCallStaticMethod(
+                    "trait definition",
+                    CharacterTraitDefinition,
+                    "getCharacterTraitDefinition",
+                    traitObject
+                )
+                local traitLabel = ZKCallMethod("trait label", traitDefinition, "getLabel")
+                if traitLabel then
+                    traitName = traitLabel
+                end
+                if traitName then
+                    table.insert(traitNames, tostring(traitName))
+                end
+            end
         end
+        playerData.traits = table.concat(traitNames, ",")
 
         playerData.isFemale = player:isFemale()
 

@@ -7,7 +7,7 @@ if not isServer() then
     return
 end
 
-ZKPrintNoTime("Mod version: v2.2 (Build 42)")
+ZKPrintNoTime("Mod version: v2.3 (Build 42)")
 
 local function ZKNormalizeFilePath(filePath)
     if not filePath or filePath == "" then

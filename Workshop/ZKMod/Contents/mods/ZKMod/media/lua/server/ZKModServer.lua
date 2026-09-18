@@ -7,7 +7,7 @@ if not isServer() then
     return
 end
 
-ZKPrint("Mod version: v2.3 (Build 41)")
+ZKPrint("Mod version: v2.4 (Build 41)")
 
 local function ZKNormalizeFilePath(filePath)
     if not filePath or filePath == "" then

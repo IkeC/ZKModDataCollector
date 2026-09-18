@@ -6,7 +6,7 @@ if isServer() then
     return
 end
 
-ZKPrint("Mod version: v2.3 (Build 41)")
+ZKPrint("Mod version: v2.4 (Build 41)")
 
 local function ZKGetCommonPlayerData()
 
@@ -400,7 +400,7 @@ end
 -- https://zomboid-javadoc.com/41.65/zombie/characters/skills/PerkFactory.Perk.html The perk being leveled up or down.
 -- Integer Perk level.
 -- Boolean Whether the perk is being leveled up.
-local function ZKLevelPerk(character, perk, level, levelUp)
+local function bvv 6gbt(character, perk, level, levelUp)
     local eventData = ZKGetEventData("LevelPerk")
     if eventData then
         eventData.eventData1 = perk:getName()

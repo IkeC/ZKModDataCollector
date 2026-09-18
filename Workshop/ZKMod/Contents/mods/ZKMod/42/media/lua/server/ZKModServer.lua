@@ -7,7 +7,7 @@ if not isServer() then
     return
 end
 
-ZKPrintNoTime("Mod version: v2.3 (Build 42)")
+ZKPrintNoTime("Mod version: v2.4 (Build 42)")
 
 local function ZKNormalizeFilePath(filePath)
     if not filePath or filePath == "" then
@@ -300,6 +300,42 @@ local function SaveEventData(data)
     end
 end
 
+local function ZKSaveLevelPerkEvent(character, perk, level, levelUp)
+    if not character then
+        return
+    end
+
+    local username = character:getUsername()
+    local descriptor = character:getDescriptor()
+    local forename = ""
+    local surname = ""
+    if descriptor then
+        forename = descriptor:getForename() or ""
+        surname = descriptor:getSurname() or ""
+    end
+
+    local eventData = {
+        systemDate = ZKGetSystemDate(),
+        systemTime = ZKGetSystemTime(),
+        gametime = ZKGetGameTimeString(getGameTime()),
+        steamID = username and tostring(getSteamIDFromUsername(username) or "") or "",
+        username = username,
+        charName = (forename .. " " .. surname):gsub("^%s+", ""):gsub("%s+$", ""),
+        eventName = "LevelPerk",
+        eventData1 = perk and perk:getName() or "",
+        eventData2 = level or 0,
+        eventData3 = levelUp and true or false,
+        eventData4 = "",
+        eventData5 = ""
+    }
+
+    if eventData.charName == "" then
+        eventData.charName = username or ""
+    end
+
+    SaveEventData(eventData)
+end
+
 -- executed when a client sends its information to the server
 local ZKOnClientCommand = function(module, command, player, args)
     -- ZKPrint("ZKOnClientCommand: module=" .. module .. " command=" .. command .. " username=" .. args.username)
@@ -430,6 +466,20 @@ end
 
 -- https://pzwiki.net/wiki/Modding:Lua_Events
 Events.OnClientCommand.Add(ZKOnClientCommand)
+
+-- https://pzwiki.net/wiki/Modding:Lua_Events/LevelPerk
+-- Build 42 dispatches this event on the server.
+local function ZKRegisterLevelPerkEvent()
+    if not SandboxVars or not SandboxVars.ZKMod then
+        return
+    end
+
+    if SandboxVars.ZKMod.ServerSendEventLevelPerk == 1 then
+        Events.LevelPerk.Add(ZKSaveLevelPerkEvent)
+    end
+end
+
+ZKRegisterLevelPerkEvent()
 
 -- Based on weather function by Snake: http://pzmodding.blogspot.com/
 function ZKGetWeather()

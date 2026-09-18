@@ -6,7 +6,7 @@ if isServer() then
     return
 end
 
-ZKPrint("Mod version: v2.3 (Build 42)")
+ZKPrint("Mod version: v2.4 (Build 42)")
 
 local clientEventsRegistered = false
 
@@ -388,18 +388,6 @@ local function ZKSendPlayerDataDeath()
     SendPlayerData(true)
 end
 
-local function ZKGetEventData(EventName)
-    local eventData = ZKGetCommonPlayerData()
-    eventData.eventName = EventName
-    eventData.eventData1 = ""
-    eventData.eventData2 = ""
-    eventData.eventData3 = ""
-    eventData.eventData4 = ""
-    eventData.eventData5 = ""
-
-    return eventData
-end
-
 local function ZKSendPlayerPerksData()
 
     -- https://zomboid-javadoc.com/41.65/zombie/characters/IsoPlayer.html
@@ -567,30 +555,6 @@ function ZKSaveItemWeaponMagazine(lines, playerData, itemIndex, weaponItem)
     end
 end
 
--- https://pzwiki.net/wiki/Modding:Lua_Events/LevelPerk
--- IsoGameCharacter The character whose perk is being leveled up or down.
--- https://zomboid-javadoc.com/41.65/zombie/characters/skills/PerkFactory.Perk.html The perk being leveled up or down.
--- Integer Perk level.
--- Boolean Whether the perk is being leveled up.
-local function ZKLevelPerk(character, perk, level, levelUp)
-    local eventData = ZKGetEventData("LevelPerk")
-    if eventData then
-        eventData.eventData1 = perk and perk:getName() or ""
-        eventData.eventData2 = level or 0
-        eventData.eventData3 = levelUp and true or false
-        local player = character
-        if not player or not player.getUsername then
-            player = getPlayer()
-        end
-        if player then
-            local command = "SendEvent"
-            sendClientCommand(player, "ZKMod", command, eventData)
-        end
-    end
-
-    ZKSendPlayerPerksData()
-end
-
 local function ZKSendPlayerInventoryDataStart()
     ZKPrint("ZKSendPlayerInventoryDataStart")
     ZKSendPlayerInventoryData()
@@ -628,13 +592,6 @@ local function ZKRegisterClientEvents()
     -- Default: 1
     if zkSandbox.ClientSendPlayerDataDeath == 1 then
         Events.OnPlayerDeath.Add(ZKSendPlayerDataDeath)
-    end
-
-    ZKPrint("ZKRegisterClientEvents: SandboxVars.ZKMod.ClientSendEventLevelPerk=" .. tostring(zkSandbox.ClientSendEventLevelPerk))
-    -- 0: Off, 1: On
-    -- Default: 1
-    if zkSandbox.ClientSendEventLevelPerk == 1 then
-        Events.LevelPerk.Add(ZKLevelPerk)
     end
 
     ZKPrint("ZKRegisterClientEvents: SandboxVars.ZKMod.ClientSendPlayerPerksDataEvery=" ..

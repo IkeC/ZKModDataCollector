@@ -42,7 +42,7 @@ option ZKMod.ClientSendPlayerDataDeath
 	description = "0: Off | 1: On"
 }
 
-option ZKMod.ClientSendEventLevelPerk
+option ZKMod.ServerSendEventLevelPerk
 {
 	type = integer, min = 0, max = 1, default = 1,
 	description = "0: Off | 1: On"

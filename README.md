@@ -20,7 +20,7 @@ SandboxVars = {
         ServerSaveFactionsEvery = 3,
         ClientSendPlayerDataAliveEvery = 2,
         ClientSendPlayerDataDeath = 1,
-        ClientSendEventLevelPerk = 1,
+        ServerSendEventLevelPerk = 1,
         ClientSendPlayerPerksDataEvery = 3,
         ClientSendPlayerInventoryDataEvery = 3,
         ServerTimeOffsetMinutes = 120
@@ -33,6 +33,9 @@ Here's my Ko-fi: https://ko-fi.com/ikeserver
 Thanks in advance!
 
 # Changelog
+
+## ZKMod 2.4 (2026-09-18)
+* Build 42 perk level-up events are now collected on the server through the `LevelPerk` event.
 
 ## ZKMod 2.3 (2026-09-12)
 * Build 42 character profession and trait collection now uses the current character API
